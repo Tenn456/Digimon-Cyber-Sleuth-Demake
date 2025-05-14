@@ -98,8 +98,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 988bfd0d16456a8408fadeec84392008, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  stats: {fileID: 6057304483299362982}
+  stats: {fileID: 0}
   currentHP: 0
+  currentSP: 0
 --- !u!114 &6057304483299362982
 MonoBehaviour:
   m_ObjectHideFlags: 0

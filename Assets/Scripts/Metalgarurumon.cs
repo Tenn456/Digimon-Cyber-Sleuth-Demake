@@ -8,6 +8,11 @@ public class Metalgarurumon : MonoBehaviour
     public int currentHP;
     public int currentSP;
 
+    public void InitializeStats()
+    {
+
+    }
+
     // Start is called before the first frame update
     void Start()
     {

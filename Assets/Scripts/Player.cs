@@ -23,22 +23,8 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!GameManager.Instance.isInBattle)
-        {
-            Movement();
-            RandomEncounter();
-
-        }
-        else
-        {
-            if (Input.GetKeyDown("space"))
-            {
-                GameManager.Instance.EndBattle();
-                //this.transform.position = GameManager.Instance.playerPosition;
-            }
-        }
-
-
+        Movement();
+        RandomEncounter();
     }
 
     void FixedUpdate()
