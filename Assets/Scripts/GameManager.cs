@@ -9,9 +9,6 @@ public class GameManager : MonoBehaviour
 
     public WargreymonStats playerDigimon;
 
-    // Example player data
-    public int playerLevel = 1;
-    public int playerHP = 100;
     public Vector3 playerPosition;
 
     // Example encounter data

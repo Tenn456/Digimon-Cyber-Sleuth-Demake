@@ -34,6 +34,7 @@ public class Player : MonoBehaviour
             if (Input.GetKeyDown("space"))
             {
                 GameManager.Instance.EndBattle();
+                //this.transform.position = GameManager.Instance.playerPosition;
             }
         }
 

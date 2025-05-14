@@ -10,6 +10,8 @@ GameObject:
   m_Component:
   - component: {fileID: 9109635838567420041}
   - component: {fileID: 6265626027007080343}
+  - component: {fileID: -2114338802666336532}
+  - component: {fileID: -8374365599801228902}
   m_Layer: 0
   m_Name: MetalGarurumon
   m_TagString: Untagged
@@ -84,3 +86,34 @@ SpriteRenderer:
   m_WasSpriteAssigned: 1
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
+--- !u!114 &-2114338802666336532
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4421047629082917045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 854ed66607f16af4ea8c594160659bed, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &-8374365599801228902
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4421047629082917045}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 94bd8b27ebb24b34196c5105a5c1b9f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  digimonName: MetalGarurumon
+  hp: 1580
+  sp: 197
+  atk: 203
+  intel: 178
+  def: 178
+  spd: 242

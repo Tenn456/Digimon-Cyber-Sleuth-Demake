@@ -2,16 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Wargreymon : MonoBehaviour
+public class Metalgarurumon : MonoBehaviour
 {
-    public WargreymonStats stats;
+    public MetalGarurumonStats stats;
     public int currentHP;
     public int currentSP;
 
     // Start is called before the first frame update
     void Start()
     {
-        stats = GetComponent<WargreymonStats>();
+        stats = GetComponent<MetalGarurumonStats>();
         currentHP = stats.hp;
         currentSP = stats.sp;
         Debug.Log($"{stats.digimonName} enters battle with {currentHP} HP.");
