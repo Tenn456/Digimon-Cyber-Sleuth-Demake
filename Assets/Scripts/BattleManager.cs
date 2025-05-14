@@ -1,4 +1,5 @@
-using JetBrains.Annotations;
+//using JetBrains.Annotations;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,37 +7,51 @@ using UnityEngine.UI;
 
 public class BattleManager : MonoBehaviour
 {
-    public GameObject[] enemyPrefabs;
-    public Transform enemySpawnPoint;
-    public GameObject[] allyPrefabs;
-    public GameObject playerDigimon;
-    public Transform playerDigimonSpawnPoint;
     public GameObject rootUI;
-    public GameObject[] rootUIButtons;
-    public int onButton = 0;
-    public List<GameObject> friendlies = new List<GameObject>();
-    public List<GameObject> enemies = new List<GameObject>();
     public GameObject enemyIndicator;
+
+    public GameObject[] allyPrefabs;
+    public GameObject[] enemyPrefabs;
+
+    public GameObject[] rootUIButtons;
+
+    public Transform[] playerDigimonSpawnPoint;
+    public Transform[] enemySpawnPoint;
+
+    public List<GameObject> digimonOnField = new List<GameObject>();
+
     public Wargreymon wargreymon;
     public Metalgarurumon metalgarurumon;
-    public GameObject enemyDigimon;
+
+    Ally playerDigimon1;
+    Ally playerDigimon2;
+
+    Enemy enemyDigimon1;
+    Enemy enemyDigimon2;
+    Enemy enemyDigimon3;
+
+    public int enemiesSpawned;
+
+    public int onButton = 0;
+    public int onEnemy = 0;
 
     public bool choosingEnemytoAttack;
     public bool attacking;
     public bool enemyAttacking;
-    public float indicatorRotateSpeed;
-    public float indicatorScaleSpeed;
-    public int onEnemy = 0;
-    public int index1;
     public bool enemyTurnStarted = false;
     public bool playerTurnStarted = false;
+    public bool digimonSpeedFull;
+
+    public float indicatorRotateSpeed;
+    public float indicatorScaleSpeed;
 
     public Vector3 indicatorMinScale;
     public Vector3 indicatorMaxScale;
 
     public enum BattleState { Start, PlayerTurn, EnemyTurn, Won, Lost }
-    public BattleState state;
     public enum UIState { Root, Attack, Waiting }
+
+    public BattleState state;
     public UIState uiState;
 
     // Start is called before the first frame update
@@ -122,15 +137,15 @@ public class BattleManager : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        if (metalgarurumon.currentHP <= 0)
-        {
-            state = BattleState.Won;
-            StartCoroutine(EndBattle());
-        }
-        else
-        {
-            state = BattleState.EnemyTurn;
-        }
+        //if (metalgarurumon.currentHP <= 0)
+        //{
+        //    state = BattleState.Won;
+        //    StartCoroutine(EndBattle());
+        //}
+        //else
+        //{
+        //    state = BattleState.EnemyTurn;
+        //}
     }
 
     IEnumerator EnemyTurn()
@@ -145,17 +160,17 @@ public class BattleManager : MonoBehaviour
 
         yield return new WaitForSeconds(1f);
 
-        if (wargreymon.currentHP <= 0)
-        {
-            state = BattleState.Lost;
-            StartCoroutine(EndBattle());
-            enemyTurnStarted = false;
-        }
-        else
-        {
-            state = BattleState.PlayerTurn;
-            enemyTurnStarted = false;
-        }
+        //if (wargreymon.currentHP <= 0)
+        //{
+        //    state = BattleState.Lost;
+        //    StartCoroutine(EndBattle());
+        //    enemyTurnStarted = false;
+        //}
+        //else
+        //{
+        //    state = BattleState.PlayerTurn;
+        //    enemyTurnStarted = false;
+        //}
     }
 
     IEnumerator EndBattle()
@@ -179,15 +194,15 @@ public class BattleManager : MonoBehaviour
 
             Debug.Log($"{metalgarurumon.stats.digimonName} takes {damageDone} damage");
 
-            metalgarurumon.currentHP -= damageDone;
-            //metalgarurumon.currentHP -= 1000000000;
+            //metalgarurumon.currentHP -= damageDone;
+            ////metalgarurumon.currentHP -= 1000000000;
 
-            if (metalgarurumon.currentHP < 0)
-            {
-                metalgarurumon.currentHP = 0;
-            }
+            //if (metalgarurumon.currentHP < 0)
+            //{
+            //    metalgarurumon.currentHP = 0;
+            //}
 
-            Debug.Log($"{metalgarurumon.stats.digimonName} has {metalgarurumon.currentHP} HP remaining!");
+            //Debug.Log($"{metalgarurumon.stats.digimonName} has {metalgarurumon.currentHP} HP remaining!");
 
             attacking = false;
         }
@@ -202,15 +217,15 @@ public class BattleManager : MonoBehaviour
 
             Debug.Log($"{wargreymon.stats.digimonName} takes {damageDone} damage");
 
-            wargreymon.currentHP -= damageDone;
-            //wargreymon.currentHP -= 1000000000;
+            //wargreymon.currentHP -= damageDone;
+            ////wargreymon.currentHP -= 1000000000;
 
-            if (wargreymon.currentHP < 0)
-            {
-                wargreymon.currentHP = 0;
-            }
+            //if (wargreymon.currentHP < 0)
+            //{
+            //    wargreymon.currentHP = 0;
+            //}
 
-            Debug.Log($"{wargreymon.stats.digimonName} has {wargreymon.currentHP} HP remaining!");
+            //Debug.Log($"{wargreymon.stats.digimonName} has {wargreymon.currentHP} HP remaining!");
 
             enemyAttacking = false;
         }
@@ -218,31 +233,68 @@ public class BattleManager : MonoBehaviour
 
     void SpawnPlayerDigimon()
     {
-        playerDigimon = allyPrefabs[0];
-            
-        GameObject spawnedAlly = Instantiate(playerDigimon, playerDigimonSpawnPoint.position, Quaternion.identity);
-        wargreymon = spawnedAlly.GetComponent<Wargreymon>();
-        //wargreymon.stats = GameManager.Instance.playerDigimon;
+        if (allyPrefabs.Length == 0) return;
 
-        friendlies.Add(spawnedAlly);
+        for (int i = 0; i < allyPrefabs.Length; i++)
+        {
+            GameObject playerDigimon = allyPrefabs[i];
+
+            if (i == 0)
+            {
+                GameObject spawnedAlly1 = Instantiate(playerDigimon, playerDigimonSpawnPoint[i].position, Quaternion.identity);
+                playerDigimon1 = spawnedAlly1.GetComponent<Ally>();
+
+                digimonOnField.Add(spawnedAlly1);
+            }
+            else if (i == 1)
+            {
+                GameObject spawnedAlly2 = Instantiate(playerDigimon, playerDigimonSpawnPoint[i].position, Quaternion.identity);
+                playerDigimon2 = spawnedAlly2.GetComponent<Ally>();
+
+                digimonOnField.Add(spawnedAlly2);
+            }
+        }
     }
 
     void SpawnRandomEnemy()
     {
         if (enemyPrefabs.Length == 0) return;
 
-        // index = Random.Range(0, enemyPrefabs.Length);
-        index1 = 0;
-        enemyDigimon = enemyPrefabs[index1];
+        //enemiesSpawned = Random.Range(1, 3);
+        enemiesSpawned = 1;
 
-        GameObject spawnedEnemy = Instantiate(enemyDigimon, enemySpawnPoint.position, Quaternion.identity);
-
-        if (index1 == 0)
+        for (int i = 0; i < enemiesSpawned; i++)
         {
-            metalgarurumon = spawnedEnemy.GetComponent<Metalgarurumon>();
-        }
+            // Grabs an enemy from random
+            // int index = Random.Range(0, enemyPrefabs.Length);
+            int index = 0;
+            GameObject enemyDigimon = enemyPrefabs[index];
 
-        enemies.Add(spawnedEnemy);
+            if (i == 0)
+            {
+                // Spawns the enemy
+                GameObject spawnedEnemy1 = Instantiate(enemyDigimon, enemySpawnPoint[i].position, Quaternion.identity);
+                enemyDigimon1 = spawnedEnemy1.GetComponent<Enemy>();
+
+                digimonOnField.Add(spawnedEnemy1);
+            }
+            else if (i == 1)
+            {
+                // Spawns the enemy
+                GameObject spawnedEnemy2 = Instantiate(enemyDigimon, enemySpawnPoint[i].position, Quaternion.identity);
+                enemyDigimon2 = spawnedEnemy2.GetComponent<Enemy>();
+
+                digimonOnField.Add(spawnedEnemy2);
+            }
+            if (i == 2)
+            {
+                // Spawns the enemy
+                GameObject spawnedEnemy3 = Instantiate(enemyDigimon, enemySpawnPoint[i].position, Quaternion.identity);
+                enemyDigimon3 = spawnedEnemy3.GetComponent<Enemy>();
+
+                digimonOnField.Add(spawnedEnemy3);
+            }
+        }
     }
 
     void RootUI()
@@ -337,7 +389,7 @@ public class BattleManager : MonoBehaviour
 
         enemyIndicator.SetActive(true);
 
-        enemyIndicator.transform.position = enemySpawnPoint.position;
+        enemyIndicator.transform.position = enemySpawnPoint[onEnemy].position;
         enemyIndicator.transform.Rotate(0f, 0f, indicatorRotateSpeed * Time.deltaTime);
         enemyIndicator.transform.localScale = Vector3.Lerp(indicatorMinScale, indicatorMaxScale, t);
 

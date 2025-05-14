@@ -2,19 +2,18 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Wargreymon : MonoBehaviour
+public class Wargreymon : Ally
 {
-    public WargreymonStats stats;
-    public int currentHP;
-    public int currentSP;
-
     // Start is called before the first frame update
     void Start()
     {
-        stats = GetComponent<WargreymonStats>();
-        currentHP = stats.hp;
-        currentSP = stats.sp;
-        Debug.Log($"{stats.digimonName} enters battle with {currentHP} HP.");
+        AllyIntro();
+    }
+
+    protected override void AllyIntro()
+    {
+        base.AllyIntro();
+        Debug.Log($"{stats.digimonName} enters battle with {stats.currentHP} HP.");
     }
 
     // Update is called once per frame

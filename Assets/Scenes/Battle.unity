@@ -694,36 +694,36 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a0f9c488ae5e5e4f923d613d03962b1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  rootUI: {fileID: 1195553483}
+  enemyIndicator: {fileID: 1447095607}
+  allyPrefabs:
+  - {fileID: 6112796965615874929, guid: 79bfa30688c54b345b52cb020cdfbc58, type: 3}
   enemyPrefabs:
   - {fileID: 4421047629082917045, guid: ba84c9701aab6fd4ba09d223eb1dce87, type: 3}
   - {fileID: 4717293584505497715, guid: 9a8097c85eff60243863ad8e03ade68c, type: 3}
-  enemySpawnPoint: {fileID: 1886728383}
-  allyPrefabs:
-  - {fileID: 6112796965615874929, guid: 79bfa30688c54b345b52cb020cdfbc58, type: 3}
-  playerDigimon: {fileID: 0}
-  playerDigimonSpawnPoint: {fileID: 1445134981}
-  rootUI: {fileID: 1195553483}
   rootUIButtons:
   - {fileID: 1479061903}
   - {fileID: 722657035}
   - {fileID: 2118377832}
   - {fileID: 2130218876}
-  onButton: 0
-  friendlies: []
-  enemies: []
-  enemyIndicator: {fileID: 1447095607}
+  playerDigimonSpawnPoint:
+  - {fileID: 1445134981}
+  enemySpawnPoint:
+  - {fileID: 1886728383}
+  digimonOnField: []
   wargreymon: {fileID: 0}
   metalgarurumon: {fileID: 0}
-  enemyDigimon: {fileID: 0}
+  enemiesSpawned: 0
+  onButton: 0
+  onEnemy: 0
   choosingEnemytoAttack: 0
   attacking: 0
   enemyAttacking: 0
-  indicatorRotateSpeed: 50
-  indicatorScaleSpeed: 1
-  onEnemy: 0
-  index1: 0
   enemyTurnStarted: 0
   playerTurnStarted: 0
+  digimonSpeedFull: 0
+  indicatorRotateSpeed: 50
+  indicatorScaleSpeed: 1
   indicatorMinScale: {x: 0.02, y: 0.02, z: 0.02}
   indicatorMaxScale: {x: 0.025, y: 0.025, z: 0.025}
   state: 0
