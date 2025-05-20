@@ -1,80 +1,572 @@
-//using JetBrains.Annotations;
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using UnityEngine.Video;
+using Unity.VisualScripting;
 
 public class BattleManager : MonoBehaviour
 {
+    public static BattleManager Instance;
+
+    public GameObject spawnedAlly1;
+    public GameObject spawnedAlly2;
+    public GameObject spawnedEnemy1;
+    public GameObject spawnedEnemy2;
+    public GameObject spawnedEnemy3;
+    public GameObject currentDigimon;
+
     public GameObject rootUI;
-    public GameObject enemyIndicator;
+    public GameObject skillsUI;
+    public GameObject itemUI;
+    public GameObject enemyIndicator1;
+    public GameObject enemyIndicator2;
+    public GameObject enemyIndicator3;
+    public GameObject allyIndicator1;
+    public GameObject allyIndicator2;
+    public GameObject player1UI;
+    public GameObject player2UI;
+    public GameObject player1Shield;
+    public GameObject player2Shield;
+    public GameObject enemy1Shield;
+    public GameObject enemy2Shield;
+    public GameObject enemy3Shield;
+    public GameObject itemSelectorBox;
+    public GameObject enemy1HPBar;
+    public GameObject enemy2HPBar;
+    public GameObject enemy3HPBar;
 
     public GameObject[] allyPrefabs;
     public GameObject[] enemyPrefabs;
 
     public GameObject[] rootUIButtons;
+    public GameObject[] skillsUIButtons;
+
+    public GameObject[] itemUIButtons;
 
     public Transform[] playerDigimonSpawnPoint;
     public Transform[] enemySpawnPoint;
 
+    public Vector3 p1UiStartPosition;
+    public Vector3 p1UiEndPosition;
+    public Vector3 p2UiStartPosition;
+    public Vector3 p2UiEndPosition;
+    public Vector3 enemy1DamageBotPosition;
+    public Vector3 enemy2DamageBotPosition;
+    public Vector3 enemy3DamageBotPosition;
+    public Vector3 player1DamageBotPosition;
+    public Vector3 player2DamageBotPosition;
+
     public List<GameObject> digimonOnField = new List<GameObject>();
+    public List<GameObject> allyDigimonList = new List<GameObject>();
+    public List<GameObject> enemyDigimonList = new List<GameObject>();
+    public List<GameObject> allyDigimonAlive = new List<GameObject>();
 
-    public Wargreymon wargreymon;
-    public Metalgarurumon metalgarurumon;
+    public TextMeshProUGUI skillDescriptionText;
+    public TextMeshProUGUI skill1Name;
+    public TextMeshProUGUI skill1Cost;
+    public TextMeshProUGUI skill2Name;
+    public TextMeshProUGUI skill2Cost;
+    public TextMeshProUGUI skill3Name;
+    public TextMeshProUGUI skill3Cost;
+    public TextMeshProUGUI player1HP;
+    public TextMeshProUGUI player2HP;
+    public TextMeshProUGUI enemy1HP;
+    public TextMeshProUGUI enemy2HP;
+    public TextMeshProUGUI enemy3HP;
+    public TextMeshProUGUI player1SP;
+    public TextMeshProUGUI player2SP;
+    public TextMeshProUGUI player1Name;
+    public TextMeshProUGUI player2Name;
+    public TextMeshProUGUI itemDescriptionText;
+    public TextMeshProUGUI hpCapsuleAmountText;
+    public TextMeshProUGUI spCapsuleAmountText;
+    public TextMeshProUGUI damageToEnemy1Text;
+    public TextMeshProUGUI damageToEnemy2Text;
+    public TextMeshProUGUI damageToEnemy3Text;
+    public TextMeshProUGUI damageToPlayer1Text;
+    public TextMeshProUGUI damageToPlayer2Text;
 
-    Ally playerDigimon1;
-    Ally playerDigimon2;
+    public VideoPlayer videoPlayer;
+    public VideoClip terraForce;
+    public VideoClip IceWolfClaw;
 
-    Enemy enemyDigimon1;
-    Enemy enemyDigimon2;
-    Enemy enemyDigimon3;
+    public Slider player1HPSlider;
+    public Slider player2HPSlider;
+    public Slider player1SPSlider;
+    public Slider player2SPSlider;
+    public Slider enemy1HPSlider;
+    public Slider enemy2HPSlider;
+    public Slider enemy3HPSlider;
+
+    public Ally playerDigimon1;
+    public Ally playerDigimon2;
+
+    public Enemy enemyDigimon1;
+    public Enemy enemyDigimon2;
+    public Enemy enemyDigimon3;
 
     public int enemiesSpawned;
+    public int targetDigimon;
+    public int enemyTargetDigimon;
+    public int allyNum = 1;
+    public int enemyNum = 1;
+    public int currentTurnIndex;
+    public int enemyActionIndex;
+    public int hpCapsuleAmount;
+    public int hpSprayAmount;
+    public int spCapsuleAmount;
+    public int spSprayAmount;
 
-    public int onButton = 0;
-    public int onEnemy = 0;
+    public int onButton;
+    public int onSkillButton = 1;
+    public int onEnemy = 1;
+    public int onItemButton = 1;
+    public int onAlly = 1;
 
-    public bool choosingEnemytoAttack;
+    public bool usingAttack;
     public bool attacking;
     public bool enemyAttacking;
-    public bool enemyTurnStarted = false;
-    public bool playerTurnStarted = false;
+    public bool enemyTurn;
+    public bool playerTurnStarted;
     public bool digimonSpeedFull;
+    public bool playerDigimon1Turn;
+    public bool playerDigimon2Turn;
+    public bool enemyDigimon1Turn;
+    public bool enemyDigimon2Turn;
+    public bool enemyDigimon3Turn;
+    public bool usingSkill;
+    public bool targetingEnemy;
+    public bool attackingEnemy1;
+    public bool attackingEnemy2;
+    public bool attackingEnemy3;
+    public bool started;
+    public bool player1Alive = true;
+    public bool player2Alive = true;
+    public bool enemyUsingSkill;
+    public bool enemyGuarding;
+    public bool usingItem;
+    public bool targetingAlly;
+    public bool targetingAlly1;
+    public bool targetingAlly2;
+    public bool targetingForItem;
+    public bool damageDealt;
+    public bool enemyAttackingP1;
+    public bool enemyAttackingP2;
+
+    public bool skillMenuUp;
+    public bool itemMenuUp;
+    public bool multiTarget;
+    public bool p1UiUp;
+    public bool p2UiUp;
+    public bool damageGoingUp = true;
+    public bool damageGoingDown;
+
+    public float pierceMultiplier = 1.8f;
 
     public float indicatorRotateSpeed;
     public float indicatorScaleSpeed;
+    public float elapsedTime;
+    public float elapsedTimeDamage;
+    public float playerUiDuration = 0.3f;
+    public float damageDuration = 0f;
 
     public Vector3 indicatorMinScale;
     public Vector3 indicatorMaxScale;
 
-    public enum BattleState { Start, PlayerTurn, EnemyTurn, Won, Lost }
-    public enum UIState { Root, Attack, Waiting }
+    public enum BattleState { Start, PlayerTurn, PlayerEndTurn, EnemyTurn, Won, Lost }
+    public enum UIState { Waiting, Root, Target, Skills, Items }
 
     public BattleState state;
     public UIState uiState;
 
+    void Awake()
+    {
+        Instance = this;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
+        // Ui Menus
         rootUI.SetActive(false);
-        enemyIndicator.SetActive(false);
-        StartCoroutine(BeginBattle());
+        skillsUI.SetActive(false);
+        itemUI.SetActive(false);
+
+        // Guard Bubbles
+        player1Shield.SetActive(false);
+        player2Shield.SetActive(false);
+        enemy1Shield.SetActive(false);
+        enemy2Shield.SetActive(false);
+        enemy3Shield.SetActive(false);
+
+        player1Shield.transform.position = playerDigimonSpawnPoint[0].position;
+        player2Shield.transform.position = playerDigimonSpawnPoint[1].position;
+        enemy1Shield.transform.position = enemySpawnPoint[0].position;
+        enemy2Shield.transform.position = enemySpawnPoint[1].position;
+        enemy3Shield.transform.position = enemySpawnPoint[2].position;
+
+        // Damage Text
+        damageToEnemy1Text.text = "";
+        damageToEnemy2Text.text = "";
+        damageToEnemy3Text.text = "";
+
+        damageToPlayer1Text.text = "";
+        damageToPlayer2Text.text = "";
+
+        float textOffsetY = 0.8f;
+        damageToEnemy1Text.transform.position = new Vector2(enemySpawnPoint[0].position.x, enemySpawnPoint[0].position.y + textOffsetY);
+        damageToEnemy2Text.transform.position = new Vector2(enemySpawnPoint[1].position.x, enemySpawnPoint[1].position.y + textOffsetY);
+        damageToEnemy3Text.transform.position = new Vector2(enemySpawnPoint[2].position.x, enemySpawnPoint[2].position.y + textOffsetY);
+
+        damageToPlayer1Text.transform.position = new Vector2(playerDigimonSpawnPoint[0].position.x, playerDigimonSpawnPoint[0].position.y + textOffsetY);
+        damageToPlayer2Text.transform.position = new Vector2(playerDigimonSpawnPoint[1].position.x, playerDigimonSpawnPoint[1].position.y + textOffsetY);
+
+        enemy1DamageBotPosition = damageToEnemy1Text.transform.position;
+        enemy2DamageBotPosition = damageToEnemy2Text.transform.position;
+        enemy3DamageBotPosition = damageToEnemy3Text.transform.position;
+
+        player1DamageBotPosition = damageToPlayer1Text.transform.position;
+        player2DamageBotPosition = damageToPlayer2Text.transform.position;
+
+
+        // Enemy HP Bar
+        enemy1HPBar.SetActive(false);
+        enemy2HPBar.SetActive(false);
+        enemy3HPBar.SetActive(false);
+
+        float offsetX = 2.5f;
+        float offsetY = 1f;
+
+        enemy1HPBar.transform.position = new Vector2(enemySpawnPoint[0].position.x - offsetX, enemySpawnPoint[0].position.y + offsetY);
+        enemy2HPBar.transform.position = new Vector2(enemySpawnPoint[1].position.x - offsetX, enemySpawnPoint[1].position.y + offsetY);
+        enemy3HPBar.transform.position = new Vector2(enemySpawnPoint[2].position.x - offsetX, enemySpawnPoint[2].position.y + offsetY);
+
+        // Target Indicators
+        allyIndicator1.SetActive(false);
+        allyIndicator2.SetActive(false);
+
+        enemyIndicator1.SetActive(false);
+        enemyIndicator2.SetActive(false);
+        enemyIndicator3.SetActive(false);
+
+        // Player Digimon UI
+        p1UiStartPosition = player1UI.transform.position;
+        p2UiStartPosition = player2UI.transform.position;
+
+        p1UiEndPosition = p1UiStartPosition + Vector3.up * 0.5f;
+        p2UiEndPosition = p2UiStartPosition + Vector3.up * 0.5f;
+
+        SpawnDigimon();
     }
 
     void Update()
     {
+        if (playerDigimon1)
+        {
+            player1HP.text = playerDigimon1.currentHP.ToString();
+            player1SP.text = playerDigimon1.currentSP.ToString();
+            player1Name.text = playerDigimon1.stats.digimonName.ToString();
+        }
+        if (playerDigimon2)
+        {
+            player2HP.text = playerDigimon2.currentHP.ToString();
+            player2SP.text = playerDigimon2.currentSP.ToString();
+            player2Name.text = playerDigimon2.stats.digimonName.ToString();
+        }
+        if (enemyDigimon1)
+        {
+            enemy1HP.text = "E1 HP: " + enemyDigimon1.currentHP.ToString();
+
+            if (enemyDigimon1.currentHP <= 0)
+            {
+                digimonOnField.Remove(spawnedEnemy1);
+                enemyDigimonList.Remove(spawnedEnemy1);
+                Destroy(spawnedEnemy1);
+            }
+        }
+        if (enemyDigimon2)
+        {
+            enemy2HP.text = "E2 HP: " + enemyDigimon2.currentHP.ToString();
+
+            if (enemyDigimon2.currentHP <= 0)
+            {
+                digimonOnField.Remove(spawnedEnemy2);
+                enemyDigimonList.Remove(spawnedEnemy2);
+                Destroy(spawnedEnemy2);
+            }
+        }
+        if (enemyDigimon3)
+        {
+            enemy3HP.text = "E3 HP: " + enemyDigimon3.currentHP.ToString();
+
+            if (enemyDigimon3.currentHP <= 0)
+            {
+                digimonOnField.Remove(spawnedEnemy3);
+                enemyDigimonList.Remove(spawnedEnemy3);
+                Destroy(spawnedEnemy3);
+            }
+        }
+
+        if (state == BattleState.Start)
+        {
+            if (!started)
+            {
+                StartCoroutine(BeginBattle());
+            }
+        }
         if (state == BattleState.PlayerTurn)
         {
             PlayerTurn();
+
+            if (playerDigimon1Turn)
+            {
+                if (!p1UiUp)
+                {
+                    elapsedTime += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTime / playerUiDuration);
+
+                    player1UI.transform.position = Vector3.Lerp(player1UI.transform.position, p1UiEndPosition, t);
+
+                    if (t >= 1f)
+                    {
+                        p1UiUp = true;
+                        elapsedTime = 0;
+                    }
+                }
+            }
+            else if (playerDigimon2Turn)
+            {
+                if (!p2UiUp)
+                {
+                    elapsedTime += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTime / playerUiDuration);
+
+                    player2UI.transform.position = Vector3.Lerp(player2UI.transform.position, p2UiEndPosition, t);
+
+                    if (t >= 1f)
+                    {
+                        p2UiUp = true;
+                        elapsedTime = 0;
+                    }
+                }
+            }
+        }
+        else if (state == BattleState.PlayerEndTurn)
+        {
+            PlayerEndTurn();
         }
         else if (state == BattleState.EnemyTurn)
         {
-            if (!enemyTurnStarted)
+            if (!enemyTurn)
             {
+                if (enemyDigimon1Turn)
+                {
+                    if (enemyDigimon1.guarding)
+                    {
+                        enemyDigimon1.guarding = false;
+                        enemy1Shield.SetActive(false);
+                    }
+                }
+                else if (enemyDigimon2Turn)
+                {
+
+                    if (enemyDigimon2.guarding)
+                    {
+                        enemyDigimon2.guarding = false;
+                        enemy2Shield.SetActive(false);
+                    }
+                }
+                else if (enemyDigimon3Turn)
+                {
+                    if (enemyDigimon3.guarding)
+                    {
+                        enemyDigimon3.guarding = false;
+                        enemy3Shield.SetActive(false);
+                    }
+                }
+
                 StartCoroutine(EnemyTurn());
-                enemyTurnStarted = true;
-                playerTurnStarted = false;
+            }
+        }
+
+        if (damageDealt)
+        {
+            if (attackingEnemy1)
+            {
+                Vector3 damageTopPosition = enemy1DamageBotPosition + Vector3.up * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToEnemy1Text.transform.position = Vector3.Lerp(damageToEnemy1Text.transform.position, damageTopPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToEnemy1Text.transform.position = Vector3.MoveTowards(damageToEnemy1Text.transform.position, enemy1DamageBotPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        elapsedTimeDamage = 0;
+
+                        damageDealt = false;
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                    }
+                }
+            }
+            if (attackingEnemy2)
+            {
+                Vector3 damageTopPosition = enemy2DamageBotPosition + Vector3.up * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToEnemy2Text.transform.position = Vector3.Lerp(damageToEnemy2Text.transform.position, damageTopPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToEnemy2Text.transform.position = Vector3.MoveTowards(damageToEnemy2Text.transform.position, enemy2DamageBotPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        elapsedTimeDamage = 0;
+
+                        damageDealt = false;
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                    }
+                }
+            }
+            if (attackingEnemy3)
+            {
+                Vector3 damageTopPosition = enemy3DamageBotPosition + Vector3.up * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToEnemy3Text.transform.position = Vector3.Lerp(damageToEnemy3Text.transform.position, damageTopPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToEnemy3Text.transform.position = Vector3.MoveTowards(damageToEnemy3Text.transform.position, enemy3DamageBotPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        elapsedTimeDamage = 0;
+
+                        damageDealt = false;
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                    }
+                }
+            }
+            if (enemyAttackingP1)
+            {
+                Vector3 damageTopPosition = player1DamageBotPosition + Vector3.up * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToPlayer1Text.transform.position = Vector3.Lerp(damageToPlayer1Text.transform.position, damageTopPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToPlayer1Text.transform.position = Vector3.MoveTowards(damageToPlayer1Text.transform.position, player1DamageBotPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        elapsedTimeDamage = 0;
+
+                        damageDealt = false;
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                    }
+                }
+            }
+            if (enemyAttackingP2)
+            {
+                Vector3 damageTopPosition = player2DamageBotPosition + Vector3.up * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToPlayer2Text.transform.position = Vector3.Lerp(damageToPlayer2Text.transform.position, damageTopPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    damageToPlayer2Text.transform.position = Vector3.MoveTowards(damageToPlayer2Text.transform.position, player2DamageBotPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        elapsedTimeDamage = 0;
+
+                        damageDealt = false;
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                    }
+                }
             }
 
         }
@@ -84,93 +576,968 @@ public class BattleManager : MonoBehaviour
     {
         state = BattleState.Start;
 
-        SpawnPlayerDigimon();
-        SpawnRandomEnemy();
+        SpeedCheck();
+        TurnCheck();
 
         yield return new WaitForSeconds(1f);
-        state = BattleState.PlayerTurn;
-        PlayerTurn();
+
+        started = true;
+    }
+
+    public void SpeedCheck()
+    {
+        // Goes through the whole list
+        digimonOnField.Sort((a, b) =>
+        {
+            int aSpeed = 0;
+            int bSpeed = 0;
+
+            // Checks if the digimon is an Ally or Enemy and grabs speed stat
+            if (a.TryGetComponent<Ally>(out var allyA))
+                aSpeed = allyA.currentSPD;
+            else if (a.TryGetComponent<Enemy>(out var enemyA))
+                aSpeed = enemyA.currentSPD;
+
+            if (b.TryGetComponent<Ally>(out var allyB))
+                bSpeed = allyB.currentSPD;
+            else if (b.TryGetComponent<Enemy>(out var enemyB))
+                bSpeed = enemyB.currentSPD;
+
+            return bSpeed.CompareTo(aSpeed); // Descending order
+        });
+
+        // Prints turn order
+        Debug.Log("Speed check complete. Turn order:");
+        foreach (var digimon in digimonOnField)
+        {
+            string name = "Unknown";
+            int speed = 0;
+
+            if (digimon.TryGetComponent<Ally>(out var ally))
+            {
+                name = ally.stats.digimonName;
+                speed = ally.currentSPD;
+                //digimon.tag = "Player" + allyNum;
+                //allyNum++;
+            }
+            else if (digimon.TryGetComponent<Enemy>(out var enemy))
+            {
+                name = enemy.stats.digimonName;
+                speed = enemy.currentSPD;
+                //digimon.tag = "Enemy" + enemyNum;
+                //enemyNum++;
+            }
+
+            Debug.Log($"{name} - Speed: {speed}");
+        }
+    }
+
+    public void TurnCheck()
+    {
+        if (!player1Alive && !player2Alive)
+        {
+            state = BattleState.Lost;
+            StartCoroutine(EndBattle());
+        }
+        else
+        {
+            if (digimonOnField.Count == 0)
+            {
+                if (spawnedAlly1)
+                {
+                    digimonOnField.Add(spawnedAlly1);
+                }
+                if (spawnedAlly2)
+                {
+                    digimonOnField.Add(spawnedAlly2);
+                }
+                if (spawnedEnemy1)
+                {
+                    digimonOnField.Add(spawnedEnemy1);
+                }
+                if (spawnedEnemy2)
+                {
+                    digimonOnField.Add(spawnedEnemy2);
+                }
+                if (spawnedEnemy3)
+                {
+                    digimonOnField.Add(spawnedEnemy3);
+                }
+
+                SpeedCheck();
+            }
+
+            currentDigimon = digimonOnField[currentTurnIndex];
+
+            if (currentDigimon.TryGetComponent<Ally>(out _))
+            {
+                if (currentDigimon == spawnedAlly1)
+                {
+                    if (playerDigimon1.currentHP > 0)
+                    {
+                        playerDigimon1Turn = true;
+                        state = BattleState.PlayerTurn;
+                        Debug.Log($"It's {playerDigimon1.stats.digimonName}'s turn (Player).");
+                    }
+                    else
+                    {
+                        digimonOnField.Remove(spawnedAlly1);
+                        TurnCheck();
+                    }
+                }
+                else if (currentDigimon == spawnedAlly2)
+                {
+                    if (playerDigimon2.currentHP > 0)
+                    {
+                        playerDigimon2Turn = true;
+                        state = BattleState.PlayerTurn;
+                        Debug.Log($"It's {playerDigimon2.stats.digimonName}'s turn (Player).");
+                    }
+                    else
+                    {
+                        digimonOnField.Remove(spawnedAlly2);
+                        TurnCheck();
+                    }
+                }
+
+            }
+            else if (currentDigimon.TryGetComponent<Enemy>(out _))
+            {
+                if (spawnedEnemy1)
+                {
+                    if (currentDigimon == spawnedEnemy1)
+                    {
+                        enemyDigimon1Turn = true;
+
+                        state = BattleState.EnemyTurn;
+                        Debug.Log($"It's {enemyDigimon1.stats.digimonName}'s 1 turn (Enemy).");
+                    }
+                }
+                if (spawnedEnemy2)
+                {
+                    if (currentDigimon == spawnedEnemy2)
+                    {
+                        enemyDigimon2Turn = true;
+                        state = BattleState.EnemyTurn;
+                        Debug.Log($"It's {enemyDigimon2.stats.digimonName}'s 2 turn (Enemy).");
+                    }
+                }
+                if (spawnedEnemy3)
+                {
+                    if (currentDigimon == spawnedEnemy3)
+                    {
+                        enemyDigimon3Turn = true;
+                        state = BattleState.EnemyTurn;
+                        Debug.Log($"It's {enemyDigimon3.stats.digimonName}'s 3 turn (Enemy).");
+                    }
+                }
+            }
+        }
     }
 
     void PlayerTurn()
     {
-        if (!playerTurnStarted)
+        if (playerDigimon1Turn)
         {
-            Debug.Log("Player's Turn! Choose an action.");
-            rootUI.SetActive(true);
-            uiState = UIState.Root;
-            playerTurnStarted = true;
+            if (!playerTurnStarted)
+            {
+                if (playerDigimon1.atkBuffed)
+                {
+                    if (playerDigimon1.turnsAtkBuffed < 3)
+                    {
+                        playerDigimon1.turnsAtkBuffed++;
+                    }
+                    else
+                    {
+                        playerDigimon1.currentATK = playerDigimon1.stats.atk;
+                        playerDigimon1.atkBuffed = false;
+                        Debug.Log(playerDigimon1.currentATK);
+                        Debug.Log("Attack Buff Ended");
+                    }
+                }
+                Debug.Log("Attack Buffed: " + playerDigimon2.atkBuffed);
+
+                if (spawnedEnemy1)
+                {
+                    onEnemy = 1;
+                }
+                else if (spawnedEnemy2)
+                {
+                    onEnemy = 1;
+                }
+                else if (spawnedEnemy3)
+                {
+                    onEnemy = 1;
+                }
+
+                if (spawnedEnemy1)
+                {
+                    enemy1HPBar.SetActive(true);
+                }
+                if (spawnedEnemy2)
+                {
+                    enemy2HPBar.SetActive(true);
+                }
+                if (spawnedEnemy3)
+                {
+                    enemy3HPBar.SetActive(true);
+                }
+
+                if (playerDigimon1.guarding)
+                {
+                    playerDigimon1.guarding = false;
+                    player1Shield.SetActive(false);
+                }
+
+                onButton = 0;
+                onSkillButton = 1;
+                enemyTurn = false;
+                rootUI.SetActive(true);
+                uiState = UIState.Root;
+                playerTurnStarted = true;
+            }
+
+            if (uiState == UIState.Root)
+            {
+                RootUI();
+            }
+            else if (uiState == UIState.Skills)
+            {
+                SkillsUI();
+            }
+            else if (uiState == UIState.Items)
+            {
+                ItemsUI();
+            }
+            else if (uiState == UIState.Target)
+            {
+                Selector();
+            }
+
+            if (attacking)
+            {
+                if (usingAttack)
+                {
+                    //OnPlayerAttack();
+                    StartCoroutine(PlayerAttack());
+                }
+                else if (usingSkill)
+                {
+                    StartCoroutine(PlayerSkill());
+                }
+
+                attacking = false;
+            }
+
+            if (usingItem)
+            {
+                StartCoroutine(Item());
+                usingItem = false;
+            }
         }
-
-
-        Image image = rootUIButtons[onButton].GetComponent<Image>();
-
-        image.color = Color.gray;
-
-        if (uiState == UIState.Root)
+        else if (playerDigimon2Turn)
         {
-            RootUI();
-        }
-        else if (uiState == UIState.Attack)
-        {
-            EnemySelector();
-        }
+            if (!playerTurnStarted)
+            {
+                if (playerDigimon2.atkBuffed)
+                {
+                    if (playerDigimon2.turnsAtkBuffed < 3)
+                    {
+                        playerDigimon2.turnsAtkBuffed++;
+                    }
+                    else
+                    {
+                        playerDigimon2.currentATK = playerDigimon2.stats.atk;
+                        playerDigimon2.atkBuffed = false;
+                        Debug.Log(playerDigimon2.currentATK);
+                        Debug.Log("Attack Buff Ended");
+                    }
 
-        if (attacking)
-        {
-            OnPlayerAttack();
+                }
+                Debug.Log("Attack Buffed: " + playerDigimon2.atkBuffed);
+
+                if (spawnedEnemy1)
+                {
+                    onEnemy = 1;
+                }
+                else if (spawnedEnemy2)
+                {
+                    onEnemy = 1;
+                }
+                else if (spawnedEnemy3)
+                {
+                    onEnemy = 1;
+                }
+
+                if (spawnedEnemy1)
+                {
+                    enemy1HPBar.SetActive(true);
+                }
+                if (spawnedEnemy2)
+                {
+                    enemy2HPBar.SetActive(true);
+                }
+                if (spawnedEnemy3)
+                {
+                    enemy3HPBar.SetActive(true);
+                }
+
+                if (playerDigimon2.guarding)
+                {
+                    playerDigimon2.guarding = false;
+                    player2Shield.SetActive(false);
+                }
+
+                onButton = 0;
+                onSkillButton = 1;
+                enemyTurn = false;
+                rootUI.SetActive(true);
+                uiState = UIState.Root;
+                playerTurnStarted = true;
+            }
+
+            if (uiState == UIState.Root)
+            {
+                RootUI();
+            }
+            else if (uiState == UIState.Skills)
+            {
+                SkillsUI();
+            }
+            else if (uiState == UIState.Items)
+            {
+                ItemsUI();
+            }
+            else if (uiState == UIState.Target)
+            {
+                Selector();
+            }
+
+            if (attacking)
+            {
+                if (usingAttack)
+                {
+                    //OnPlayerAttack();
+                    StartCoroutine(PlayerAttack());
+                }
+                else if (usingSkill)
+                {
+                    StartCoroutine(PlayerSkill());
+                }
+
+                attacking = false;
+            }
+
+            if (usingItem)
+            {
+                StartCoroutine(Item());
+                usingItem = false;
+            }
         }
     }
 
-    public void OnPlayerAttack()
-    {
-        if (state != BattleState.PlayerTurn) return;
+    //public void OnPlayerAttack()
+    //{
+    //    if (state != BattleState.PlayerTurn) return;
 
-        StartCoroutine(PlayerAttack());
-    }
+    //    StartCoroutine(PlayerAttack());
+    //}
 
     IEnumerator PlayerAttack()
     {
-        Debug.Log($"{wargreymon.stats.digimonName} attacks {metalgarurumon.stats.digimonName}!");
+        if (playerDigimon1Turn)
+        {
+            if (attackingEnemy1)
+            {
+                Debug.Log($"{playerDigimon1.stats.digimonName} attacks {enemyDigimon1.stats.digimonName}!");
 
-        DamageCalculation();
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+
+                damageDealt = true;
+
+                Debug.Log($"{enemyDigimon1.stats.digimonName} has {enemyDigimon1.currentHP} HP left!");
+
+            }
+            else if (attackingEnemy2)
+            {
+                Debug.Log($"{playerDigimon1.stats.digimonName} attacks {enemyDigimon2.stats.digimonName}!");
+
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+
+                damageDealt = true;
+
+                Debug.Log($"{enemyDigimon2.stats.digimonName} has {enemyDigimon2.currentHP} HP left!");
+            }
+            else if (attackingEnemy3)
+            {
+                Debug.Log($"{playerDigimon1.stats.digimonName} attacks {enemyDigimon3.stats.digimonName}!");
+
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+
+                damageDealt = true;
+
+                Debug.Log($"{enemyDigimon3.stats.digimonName} has {enemyDigimon3.currentHP} HP left!");
+            }
+        }
+        else if (playerDigimon2Turn)
+        {
+            if (attackingEnemy1)
+            {
+                Debug.Log($"{playerDigimon2.stats.digimonName} attacks {enemyDigimon1.stats.digimonName}!");
+
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+
+                damageDealt = true;
+
+                Debug.Log($"{enemyDigimon1.stats.digimonName} has {enemyDigimon1.currentHP} HP left!");
+
+            }
+            else if (attackingEnemy2)
+            {
+                Debug.Log($"{playerDigimon2.stats.digimonName} attacks {enemyDigimon2.stats.digimonName}!");
+
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+
+                damageDealt = true;
+
+                Debug.Log($"{enemyDigimon2.stats.digimonName} has {enemyDigimon2.currentHP} HP left!");
+            }
+            else if (attackingEnemy3)
+            {
+                Debug.Log($"{playerDigimon2.stats.digimonName} attacks {enemyDigimon3.stats.digimonName}!");
+
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+
+                damageDealt = true;
+
+                Debug.Log($"{enemyDigimon3.stats.digimonName} has {enemyDigimon3.currentHP} HP left!");
+            }
+        }
 
         yield return new WaitForSeconds(1f);
 
-        //if (metalgarurumon.currentHP <= 0)
-        //{
-        //    state = BattleState.Won;
-        //    StartCoroutine(EndBattle());
-        //}
-        //else
-        //{
-        //    state = BattleState.EnemyTurn;
-        //}
+        damageToEnemy1Text.text = "";
+        damageToEnemy2Text.text = "";
+        damageToEnemy3Text.text = "";
+
+        state = BattleState.PlayerEndTurn;
+    }
+
+    IEnumerator PlayerSkill()
+    {
+        if (playerDigimon1Turn)
+        {
+            if (onSkillButton == 1)
+            {
+                playerDigimon1.currentSP -= playerDigimon1.stats.skill1Cost;
+                player1SPSlider.value = playerDigimon1.currentSP;
+
+                Debug.Log($"{playerDigimon1.stats.digimonName} uses {playerDigimon1.stats.skill1Name}");
+
+                if (spawnedEnemy1)
+                {
+                    attackingEnemy1 = true;
+                }
+                if (spawnedEnemy2)
+                {
+                    attackingEnemy2 = true;
+                }
+                if (spawnedEnemy1)
+                {
+                    attackingEnemy3 = true;
+                }
+
+                videoPlayer.clip = terraForce;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(3f);
+
+                videoPlayer.Stop();
+
+                DamageCalculation();
+
+                damageDealt = true;
+
+            }
+            else if (onSkillButton == 2)
+            {
+                playerDigimon1.currentSP -= playerDigimon1.stats.skill2Cost;
+                player1SPSlider.value = playerDigimon1.currentSP;
+
+                if (attackingEnemy1)
+                {
+                    Debug.Log($"{playerDigimon1.stats.digimonName} uses {playerDigimon1.stats.skill2Name} on {enemyDigimon1.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+
+                    damageDealt = true;
+                }
+                else if (attackingEnemy2)
+                {
+                    Debug.Log($"{playerDigimon1.stats.digimonName} uses {playerDigimon1.stats.skill2Name} on {enemyDigimon2.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+
+                    damageDealt = true;
+                }
+                else if (attackingEnemy3)
+                {
+                    Debug.Log($"{playerDigimon1.stats.digimonName} uses {playerDigimon1.stats.skill2Name} on {enemyDigimon3.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+
+                    damageDealt = true;
+                }
+            }
+            //else
+            //{
+            //    playerDigimon1.currentSP -= playerDigimon1.stats.skill3Cost;
+            //}
+        }
+        else if (playerDigimon2Turn)
+        {
+            if (onSkillButton == 1)
+            {
+                playerDigimon2.currentSP -= playerDigimon2.stats.skill1Cost;
+                player2SPSlider.value = playerDigimon2.currentSP;
+
+                if (attackingEnemy1)
+                {
+                    Debug.Log($"{playerDigimon2.stats.digimonName} uses {playerDigimon2.stats.skill1Name} on {enemyDigimon1.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+
+                    damageDealt = true;
+                }
+                else if (attackingEnemy2)
+                {
+                    Debug.Log($"{playerDigimon2.stats.digimonName} uses {playerDigimon2.stats.skill1Name} on {enemyDigimon2.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+
+                    damageDealt = true;
+                }
+                if (attackingEnemy3)
+                {
+                    Debug.Log($"{playerDigimon2.stats.digimonName} uses {playerDigimon2.stats.skill1Name} on {enemyDigimon3.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+
+                    damageDealt = true;
+                }
+            }
+            else if (onSkillButton == 2)
+            {
+                playerDigimon2.currentSP -= playerDigimon2.stats.skill2Cost;
+                player2SPSlider.value = playerDigimon2.currentSP;
+
+                Debug.Log($"{playerDigimon2.stats.digimonName} uses {playerDigimon2.stats.skill2Name}");
+
+                if (spawnedEnemy1)
+                {
+                    attackingEnemy1 = true;
+                }
+                if (spawnedEnemy2)
+                {
+                    attackingEnemy2 = true;
+                }
+                if (spawnedEnemy1)
+                {
+                    attackingEnemy3 = true;
+                }
+
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+
+                damageDealt = true;
+            }
+            //else
+            //{
+            //    playerDigimon1.currentSP -= playerDigimon1.stats.skill3Cost;
+            //}
+        }
+
+        yield return new WaitForSeconds(1f);
+
+        damageToEnemy1Text.text = "";
+        damageToEnemy2Text.text = "";
+        damageToEnemy3Text.text = "";
+
+        state = BattleState.PlayerEndTurn;
+    }
+
+    public void PlayerEndTurn()
+    {
+        elapsedTime += Time.deltaTime;
+        float t = Mathf.Clamp01(elapsedTime / playerUiDuration);
+
+        if (playerDigimon1Turn)
+        {
+            player1UI.transform.position = Vector3.Lerp(player1UI.transform.position, p1UiStartPosition, t);
+
+            if (t >= 1f)
+            {
+                p1UiUp = false;
+                elapsedTime = 0;
+
+                // End Turn
+                usingAttack = false;
+                targetingAlly1 = false;
+                targetingAlly2 = false;
+                attackingEnemy1 = false;
+                attackingEnemy2 = false;
+                attackingEnemy3 = false;
+                playerDigimon1Turn = false;
+                playerTurnStarted = false;
+
+                // Places Digimon to back of the turn que
+                digimonOnField.RemoveAt(0);
+            }
+        }
+        else if (playerDigimon2Turn)
+        {
+            player2UI.transform.position = Vector3.Lerp(player2UI.transform.position, p2UiStartPosition, t);
+
+            if (t >= 1f)
+            {
+                p2UiUp = false;
+                elapsedTime = 0;
+
+                // End Turn
+                usingAttack = false;
+                targetingAlly1 = false;
+                targetingAlly2 = false;
+                attackingEnemy1 = false;
+                attackingEnemy2 = false;
+                attackingEnemy3 = false;
+                playerDigimon2Turn = false;
+                playerTurnStarted = false;
+
+                // Places Digimon to back of the turn que
+                digimonOnField.RemoveAt(0);
+            }
+        }
+
+        enemy1HPBar.SetActive(false);
+        enemy2HPBar.SetActive(false);
+        enemy3HPBar.SetActive(false);
+
+        if (enemyDigimonList.Count == 0)
+        {
+            state = BattleState.Won;
+            StartCoroutine(EndBattle());
+        }
+
+        if (!p1UiUp && !p2UiUp && enemyDigimonList.Count > 0)
+        {
+            TurnCheck();
+        }
     }
 
     IEnumerator EnemyTurn()
     {
-        Debug.Log("Enemy's Turn...");
+        enemyTurn = true;
+
+        int enemyActionIndex = Random.Range(0, 3);
+
+        if (enemyActionIndex == 0)
+        {
+            enemyAttacking = true;
+        }
+        else if (enemyActionIndex == 1)
+        {
+            enemyUsingSkill = true;
+        }
+        else if (enemyActionIndex == 2)
+        {
+            enemyGuarding = true;
+        }
+
+        if (enemyAttacking)
+        {
+            StartCoroutine(EnemyAttack());
+            enemyAttacking = false;
+        }
+        else if (enemyUsingSkill)
+        {
+            if (enemyUsingSkill)
+            {
+                StartCoroutine(EnemySkill());
+                enemyUsingSkill = false;
+            }
+        }
+        else if (enemyGuarding)
+        {
+            if (enemyDigimon1Turn)
+            {
+                enemyDigimon1.guarding = true;
+                enemy1Shield.SetActive(true);
+                Debug.Log($"{enemyDigimon1.stats.digimonName} is guarding.");
+
+                yield return new WaitForSeconds(1f);
+
+                // Places Digimon to back of the turn que
+                digimonOnField.RemoveAt(0);
+                enemyTurn = false;
+                enemyDigimon1Turn = false;
+                TurnCheck();
+            }
+            else if (enemyDigimon2Turn)
+            {
+                enemyDigimon2.guarding = true;
+                enemy2Shield.SetActive(true);
+                Debug.Log($"{enemyDigimon2.stats.digimonName} is guarding.");
+
+                yield return new WaitForSeconds(1f);
+
+                // Places Digimon to back of the turn que
+                digimonOnField.RemoveAt(0);
+                enemyTurn = false;
+                enemyDigimon2Turn = false;
+                TurnCheck();
+            }
+            else if (enemyDigimon3Turn)
+            {
+                enemyDigimon3.guarding = true;
+                enemy3Shield.SetActive(true);
+                Debug.Log($"{enemyDigimon3.stats.digimonName} is guarding.");
+
+                yield return new WaitForSeconds(1f);
+
+                // Places Digimon to back of the turn que
+                digimonOnField.RemoveAt(0);
+                enemyTurn = false;
+                enemyDigimon3Turn = false;
+                TurnCheck();
+            }
+        }
+    }
+
+    IEnumerator EnemyAttack()
+    {
+        if (enemyDigimon1Turn)
+        {
+            int randomTarget = Random.Range(1, allyDigimonAlive.Count + 1);
+
+            if (randomTarget == 1)
+            {
+                if (player1Alive)
+                {
+                    enemyTargetDigimon = 1;
+                    enemyAttackingP1 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon1.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+                }
+                else
+                {
+                    enemyTargetDigimon = 2;
+                    enemyAttackingP2 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+                }
+            }
+            else if (randomTarget == 2)
+            {
+                enemyTargetDigimon = 2;
+                enemyAttackingP2 = true;
+                Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+            }
+
+            enemyDigimon1Turn = false;
+        }
+        else if (enemyDigimon2Turn)
+        {
+            int randomTarget = Random.Range(1, allyDigimonList.Count + 1);
+
+            if (randomTarget == 1)
+            {
+                if (player1Alive)
+                {
+                    enemyTargetDigimon = 1;
+                    enemyAttackingP1 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon1.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+                }
+                else
+                {
+                    enemyTargetDigimon = 2;
+                    enemyAttackingP2 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+                }
+            }
+            else if (randomTarget == 2)
+            {
+                enemyTargetDigimon = 2;
+                enemyAttackingP2 = true;
+                Debug.Log($"{enemyDigimon2.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+            }
+
+            enemyDigimon2Turn = false;
+        }
+        else if (enemyDigimon3Turn)
+        {
+            int randomTarget = Random.Range(1, allyDigimonList.Count + 1);
+
+            if (randomTarget == 1)
+            {
+                if (player1Alive)
+                {
+                    enemyTargetDigimon = 1;
+                    enemyAttackingP1 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon1.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+                }
+                else
+                {
+                    enemyTargetDigimon = 2;
+                    enemyAttackingP2 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+
+                    yield return new WaitForSeconds(1f);
+
+                    DamageCalculation();
+                }
+            }
+            else if (randomTarget == 2)
+            {
+                enemyTargetDigimon = 2;
+                enemyAttackingP2 = true;
+                Debug.Log($"{enemyDigimon3.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+
+                yield return new WaitForSeconds(1f);
+
+                DamageCalculation();
+            }
+
+            enemyDigimon3Turn = false;
+        }
+
         yield return new WaitForSeconds(1f);
 
-        Debug.Log($"{metalgarurumon.stats.digimonName} attacks {wargreymon.stats.digimonName}!");
-        enemyAttacking = true;
+        enemyAttackingP1 = false;
+        enemyAttackingP2 = false;
 
-        EnemyDamageCalculation();
+        // Places Digimon to back of the turn que
+        digimonOnField.RemoveAt(0);
+        enemyTurn = false;
+        TurnCheck();
+    }
+
+    IEnumerator EnemySkill()
+    {
+        if (enemyDigimon1Turn)
+        {
+            if (enemyDigimon1.stats.digimonName == "Machinedramon")
+            {
+                Debug.Log("Machinedramon uses Infinity Cannon!");
+
+                yield return new WaitForSeconds(1f);
+
+                enemyDigimon1.InfinityCannon();
+            }
+
+            enemyDigimon1Turn = false;
+        }
+        else if (enemyDigimon2Turn)
+        {
+            if (enemyDigimon2.stats.digimonName == "Machinedramon")
+            {
+                Debug.Log("Machinedramon uses Infinity Cannon!");
+
+                yield return new WaitForSeconds(1f);
+
+                enemyDigimon2.InfinityCannon();
+            }
+
+            enemyDigimon2Turn = false;
+        }
+        else if (enemyDigimon3Turn)
+        {
+            if (enemyDigimon3.stats.digimonName == "Machinedramon")
+            {
+                Debug.Log("Machinedramon uses Infinity Cannon!");
+
+                yield return new WaitForSeconds(1f);
+
+                enemyDigimon3.InfinityCannon();
+            }
+
+            enemyDigimon3Turn = false;
+        }
+
+        if (playerDigimon1.currentHP < 0)
+        {
+            playerDigimon1.currentHP = 0;
+            player1HPSlider.value = playerDigimon1.currentHP;
+            player1Alive = false;
+            allyDigimonAlive.Remove(spawnedAlly1);
+        }
+        if (playerDigimon2.currentHP < 0)
+        {
+            playerDigimon2.currentHP = 0;
+            player2HPSlider.value = playerDigimon2.currentHP;
+            player2Alive = false;
+            allyDigimonAlive.Remove(spawnedAlly1);
+        }
+
+        player1HPSlider.value = playerDigimon1.currentHP;
+        player2HPSlider.value = playerDigimon2.currentHP;
 
         yield return new WaitForSeconds(1f);
 
-        //if (wargreymon.currentHP <= 0)
-        //{
-        //    state = BattleState.Lost;
-        //    StartCoroutine(EndBattle());
-        //    enemyTurnStarted = false;
-        //}
-        //else
-        //{
-        //    state = BattleState.PlayerTurn;
-        //    enemyTurnStarted = false;
-        //}
+        // Places Digimon to back of the turn que
+        digimonOnField.RemoveAt(0);
+        enemyTurn = false;
+        TurnCheck();
     }
 
     IEnumerator EndBattle()
@@ -187,52 +1554,320 @@ public class BattleManager : MonoBehaviour
 
     void DamageCalculation()
     {
-        if (attacking)
+        // Player Turn
+        if (state == BattleState.PlayerTurn)
         {
-            int damageDone;
-            damageDone = (wargreymon.stats.atk * 50) / metalgarurumon.stats.def;
+            if (playerDigimon1Turn)
+            {
+                if (usingAttack)
+                {
+                    if (attackingEnemy1)
+                    {
+                        int damageDone = (playerDigimon1.currentATK * 50) / enemyDigimon1.currentDEF;
 
-            Debug.Log($"{metalgarurumon.stats.digimonName} takes {damageDone} damage");
+                        if (enemyDigimon1.guarding)
+                        {
+                            damageDone /= 2;
+                        }
 
-            //metalgarurumon.currentHP -= damageDone;
-            ////metalgarurumon.currentHP -= 1000000000;
+                        Debug.Log($"{enemyDigimon1.stats.digimonName} 1 takes {damageDone} damage");
 
-            //if (metalgarurumon.currentHP < 0)
-            //{
-            //    metalgarurumon.currentHP = 0;
-            //}
+                        enemyDigimon1.currentHP -= damageDone;
+                        //enemyDigimon1.currentHP -= 1000000000;
+                        enemy1HPSlider.value = enemyDigimon1.currentHP;
 
-            //Debug.Log($"{metalgarurumon.stats.digimonName} has {metalgarurumon.currentHP} HP remaining!");
+                        damageToEnemy1Text.text = damageDone.ToString();
+                    }
+                    else if (attackingEnemy2)
+                    {
+                        int damageDone = (playerDigimon1.currentATK * 50) / enemyDigimon2.currentDEF;
 
-            attacking = false;
+                        if (enemyDigimon2.guarding)
+                        {
+                            damageDone /= 2;
+                        }
+
+                        Debug.Log($"{enemyDigimon2.stats.digimonName} 2 takes {damageDone} damage");
+
+                        enemyDigimon2.currentHP -= damageDone;
+                        //enemyDigimon2.currentHP -= 1000000000;
+                        enemy2HPSlider.value = enemyDigimon2.currentHP;
+
+                        damageToEnemy2Text.text = damageDone.ToString();
+                    }
+                    else if (attackingEnemy3)
+                    {
+                        int damageDone = (playerDigimon1.currentATK * 50) / enemyDigimon3.currentDEF;
+
+                        if (enemyDigimon3.guarding)
+                        {
+                            damageDone /= 2;
+                        }
+
+                        Debug.Log($"{enemyDigimon3.stats.digimonName} takes {damageDone} damage");
+
+                        enemyDigimon3.currentHP -= damageDone;
+                        //enemyDigimon3.currentHP -= 1000000000;
+                        enemy3HPSlider.value = enemyDigimon3.currentHP;
+
+                        damageToEnemy3Text.text = damageDone.ToString();
+                    }
+                }
+                else if (usingSkill)
+                {
+                    if (onSkillButton == 1)
+                    {
+                        playerDigimon1.TerraForce();
+                    }
+                    else if (onSkillButton == 2)
+                    {
+                        playerDigimon1.GreatTornado();
+                    }
+                    else
+                    {
+                        // Skill 3 Code
+                    }
+                }
+            }
+            else if (playerDigimon2Turn)
+            {
+                if (usingAttack)
+                {
+                    if (attackingEnemy1)
+                    {
+                        int damageDone = (playerDigimon2.currentATK * 50) / enemyDigimon1.currentDEF;
+
+                        if (enemyDigimon1.guarding)
+                        {
+                            damageDone /= 2;
+                        }
+
+                        Debug.Log($"{enemyDigimon1.stats.digimonName} takes {damageDone} damage");
+
+                        enemyDigimon1.currentHP -= damageDone;
+                        //enemyDigimon1.currentHP -= 1000000000;
+                        enemy1HPSlider.value = enemyDigimon1.currentHP;
+
+                        damageToEnemy1Text.text = damageDone.ToString();
+                    }
+                    else if (attackingEnemy2)
+                    {
+                        int damageDone = (playerDigimon2.currentATK * 50) / enemyDigimon2.currentDEF;
+
+                        if (enemyDigimon2.guarding)
+                        {
+                            damageDone /= 2;
+                        }
+
+                        Debug.Log($"{enemyDigimon2.stats.digimonName} takes {damageDone} damage");
+
+                        enemyDigimon2.currentHP -= damageDone;
+                        //enemyDigimon2.currentHP -= 1000000000;
+                        enemy2HPSlider.value = enemyDigimon2.currentHP;
+                        damageToEnemy2Text.text = damageDone.ToString();
+                    }
+                    else if (attackingEnemy3)
+                    {
+                        int damageDone = (playerDigimon2.currentATK * 50) / enemyDigimon3.stats.def;
+
+                        if (enemyDigimon3.guarding)
+                        {
+                            damageDone /= 2;
+                        }
+
+                        Debug.Log($"{enemyDigimon3.stats.digimonName} takes {damageDone} damage");
+
+                        enemyDigimon3.currentHP -= damageDone;
+                        //enemyDigimon3.currentHP -= 1000000000;
+                        enemy3HPSlider.value = enemyDigimon3.currentHP;
+                        damageToEnemy3Text.text = damageDone.ToString();
+                    }
+                }
+                else if (usingSkill)
+                {
+                    if (onSkillButton == 1)
+                    {
+                        playerDigimon2.FreezingBreath();
+                    }
+                    else if (onSkillButton == 2)
+                    {
+                        playerDigimon2.IceWolfClaw();
+                    }
+                    else
+                    {
+                        // Skill 3 Code
+                    }
+                }
+            }
+
+            if (enemyDigimon1)
+            {
+                if (enemyDigimon1.currentHP < 0)
+                {
+                    enemyDigimon1.currentHP = 0;
+                }
+            }
+            if (enemyDigimon2)
+            {
+                if (enemyDigimon2.currentHP < 0)
+                {
+                    enemyDigimon2.currentHP = 0;
+                }
+            }
+            if (enemyDigimon3)
+            {
+                if (enemyDigimon3.currentHP < 0)
+                {
+                    enemyDigimon3.currentHP = 0;
+                }
+            }
+        }
+        // Enemy Turn
+        else
+        {
+            if (enemyDigimon1Turn)
+            {
+                if (enemyTargetDigimon == 1)
+                {
+                    int damageDone = (enemyDigimon1.currentATK * 50) / playerDigimon1.currentDEF;
+
+                    if (playerDigimon1.guarding)
+                    {
+                        damageDone /= 2;
+                    }
+
+                    Debug.Log($"{playerDigimon1.stats.digimonName} takes {damageDone} damage");
+
+                    playerDigimon1.currentHP -= damageDone;
+                    //playerDigimon1.currentHP -= 1000000000;
+                    player1HPSlider.value = playerDigimon1.currentHP;
+
+                    Debug.Log($"{playerDigimon1.stats.digimonName} has {playerDigimon1.currentHP} HP remaining!");
+                    enemyDigimon1Turn = false;
+                    //enemyAttacking = false;
+                }
+                else if (enemyTargetDigimon == 2)
+                {
+                    int damageDone = (enemyDigimon1.currentATK * 50) / playerDigimon2.currentDEF;
+
+                    if (playerDigimon2.guarding)
+                    {
+                        damageDone /= 2;
+                    }
+
+                    Debug.Log($"{playerDigimon2.stats.digimonName} takes {damageDone} damage");
+
+                    playerDigimon2.currentHP -= damageDone;
+                    //playerDigimon2.currentHP -= 1000000000;
+
+                    Debug.Log($"{playerDigimon2.stats.digimonName} has {playerDigimon2.currentHP} HP remaining!");
+                    enemyDigimon1Turn = false;
+                    //enemyAttacking = false;
+                }
+            }
+            else if (enemyDigimon2Turn)
+            {
+                if (enemyTargetDigimon == 1)
+                {
+                    int damageDone = (enemyDigimon2.currentATK * 50) / playerDigimon1.currentDEF;
+
+                    if (playerDigimon1.guarding)
+                    {
+                        damageDone /= 2;
+                    }
+
+                    Debug.Log($"{playerDigimon1.stats.digimonName} takes {damageDone} damage");
+
+                    playerDigimon1.currentHP -= damageDone;
+                    player1HPSlider.value = playerDigimon1.currentHP;
+                    //playerDigimon1.stats.currentHP -= 1000000000;
+
+                    Debug.Log($"{playerDigimon1.stats.digimonName} has {playerDigimon1.currentHP} HP remaining!");
+                    enemyDigimon2Turn = false;
+                    //enemyAttacking = false;
+                }
+                else if (enemyTargetDigimon == 2)
+                {
+                    int damageDone = (enemyDigimon2.currentATK * 50) / playerDigimon2.currentDEF;
+
+                    if (playerDigimon2.guarding)
+                    {
+                        damageDone /= 2;
+                    }
+
+                    Debug.Log($"{playerDigimon2.stats.digimonName} takes {damageDone} damage");
+
+                    playerDigimon2.currentHP -= damageDone;
+                    //playerDigimon1.stats.currentHP -= 1000000000;
+
+                    Debug.Log($"{playerDigimon2.stats.digimonName} has {playerDigimon2.currentHP} HP remaining!");
+                    enemyDigimon1Turn = false;
+                    //enemyAttacking = false;
+                }
+            }
+            else if (enemyDigimon3Turn)
+            {
+                if (enemyTargetDigimon == 1)
+                {
+                    int damageDone = (enemyDigimon3.currentATK * 50) / playerDigimon1.currentDEF;
+
+                    if (playerDigimon1.guarding)
+                    {
+                        damageDone /= 2;
+                    }
+
+                    Debug.Log($"{playerDigimon1.stats.digimonName} takes {damageDone} damage");
+
+                    playerDigimon1.currentHP -= damageDone;
+                    //playerDigimon1.stats.currentHP -= 1000000000;
+
+                    Debug.Log($"{playerDigimon1.stats.digimonName} has {playerDigimon1.currentHP} HP remaining!");
+                    enemyDigimon3Turn = false;
+                    //enemyAttacking = false;
+                }
+                else if (enemyTargetDigimon == 2)
+                {
+                    int damageDone = (enemyDigimon3.currentATK * 50) / playerDigimon2.currentDEF;
+
+                    if (playerDigimon2.guarding)
+                    {
+                        damageDone /= 2;
+                    }
+
+                    Debug.Log($"{playerDigimon2.stats.digimonName} takes {damageDone} damage");
+
+                    playerDigimon2.currentHP -= damageDone;
+                    //playerDigimon1.stats.currentHP -= 1000000000;
+
+                    Debug.Log($"{playerDigimon2.stats.digimonName} has {playerDigimon2.currentHP} HP remaining!");
+                    enemyDigimon1Turn = false;
+                    //enemyAttacking = false;
+                }
+            }
+
+            if (playerDigimon1.currentHP < 0)
+            {
+                playerDigimon1.currentHP = 0;
+                player1HPSlider.value = playerDigimon1.currentHP;
+                player1Alive = false;
+                allyDigimonAlive.Remove(spawnedAlly1);
+            }
+            if (playerDigimon2.currentHP < 0)
+            {
+                playerDigimon2.currentHP = 0;
+                player2HPSlider.value = playerDigimon2.currentHP;
+                player2Alive = false;
+                allyDigimonAlive.Remove(spawnedAlly1);
+            }
+
+            player1HPSlider.value = playerDigimon1.currentHP;
+            player2HPSlider.value = playerDigimon2.currentHP;
         }
     }
 
-    void EnemyDamageCalculation()
+    void SpawnDigimon()
     {
-        if (enemyAttacking)
-        {
-            int damageDone;
-            damageDone = (metalgarurumon.stats.atk * 50) / wargreymon.stats.def;
-
-            Debug.Log($"{wargreymon.stats.digimonName} takes {damageDone} damage");
-
-            //wargreymon.currentHP -= damageDone;
-            ////wargreymon.currentHP -= 1000000000;
-
-            //if (wargreymon.currentHP < 0)
-            //{
-            //    wargreymon.currentHP = 0;
-            //}
-
-            //Debug.Log($"{wargreymon.stats.digimonName} has {wargreymon.currentHP} HP remaining!");
-
-            enemyAttacking = false;
-        }
-    }
-
-    void SpawnPlayerDigimon()
-    {
+        // Ally Digimon
         if (allyPrefabs.Length == 0) return;
 
         for (int i = 0; i < allyPrefabs.Length; i++)
@@ -241,58 +1876,99 @@ public class BattleManager : MonoBehaviour
 
             if (i == 0)
             {
-                GameObject spawnedAlly1 = Instantiate(playerDigimon, playerDigimonSpawnPoint[i].position, Quaternion.identity);
+                spawnedAlly1 = Instantiate(playerDigimon, playerDigimonSpawnPoint[i].position, Quaternion.identity);
                 playerDigimon1 = spawnedAlly1.GetComponent<Ally>();
+                playerDigimon1.currentHP = playerDigimon1.stats.hp;
+                playerDigimon1.currentSP = playerDigimon1.stats.sp;
+                playerDigimon1.currentSPD = playerDigimon1.stats.spd;
+                player1HPSlider.maxValue = playerDigimon1.stats.hp;
+                player1HPSlider.value = playerDigimon1.currentHP;
+                player1SPSlider.maxValue = playerDigimon1.stats.sp;
+                player1SPSlider.value = playerDigimon1.currentSP;
+                spawnedAlly1.GetComponent<SpriteRenderer>().sortingOrder = 1;
+                spawnedAlly1.tag = "Player1";
 
                 digimonOnField.Add(spawnedAlly1);
+                allyDigimonList.Add(spawnedAlly1);
+                allyDigimonAlive.Add(spawnedAlly1);
             }
             else if (i == 1)
             {
-                GameObject spawnedAlly2 = Instantiate(playerDigimon, playerDigimonSpawnPoint[i].position, Quaternion.identity);
+                spawnedAlly2 = Instantiate(playerDigimon, playerDigimonSpawnPoint[i].position, Quaternion.identity);
                 playerDigimon2 = spawnedAlly2.GetComponent<Ally>();
+                playerDigimon2.currentHP = playerDigimon2.stats.hp;
+                playerDigimon2.currentSP = playerDigimon2.stats.sp;
+                playerDigimon2.currentSPD = playerDigimon2.stats.spd;
+                player2HPSlider.maxValue = playerDigimon2.stats.hp;
+                player2HPSlider.value = playerDigimon2.currentHP;
+                player2SPSlider.maxValue = playerDigimon2.stats.sp;
+                player2SPSlider.value = playerDigimon2.currentSP;
+                spawnedAlly1.GetComponent<SpriteRenderer>().sortingOrder = 2;
+                spawnedAlly2.tag = "Player2";
 
                 digimonOnField.Add(spawnedAlly2);
+                allyDigimonList.Add(spawnedAlly2);
+                allyDigimonAlive.Add(spawnedAlly2);
             }
         }
-    }
 
-    void SpawnRandomEnemy()
-    {
+        // Enemy Digimon
         if (enemyPrefabs.Length == 0) return;
 
-        //enemiesSpawned = Random.Range(1, 3);
-        enemiesSpawned = 1;
+        enemiesSpawned = Random.Range(1, 4);
+        //enemiesSpawned = 3;
 
         for (int i = 0; i < enemiesSpawned; i++)
         {
             // Grabs an enemy from random
-            // int index = Random.Range(0, enemyPrefabs.Length);
+            //int index = Random.Range(0, enemyPrefabs.Length + 1);
             int index = 0;
             GameObject enemyDigimon = enemyPrefabs[index];
 
             if (i == 0)
             {
                 // Spawns the enemy
-                GameObject spawnedEnemy1 = Instantiate(enemyDigimon, enemySpawnPoint[i].position, Quaternion.identity);
+                spawnedEnemy1 = Instantiate(enemyDigimon, enemySpawnPoint[i].position, Quaternion.identity);
                 enemyDigimon1 = spawnedEnemy1.GetComponent<Enemy>();
+                enemyDigimon1.currentHP = enemyDigimon1.stats.hp;
+                enemyDigimon1.currentSPD = enemyDigimon1.stats.spd;
+                enemy1HPSlider.maxValue = enemyDigimon1.stats.hp;
+                enemy1HPSlider.value = enemyDigimon1.currentHP;
+                spawnedEnemy1.GetComponent<SpriteRenderer>().sortingOrder = 1;
+                spawnedEnemy1.tag = "Enemy1";
 
                 digimonOnField.Add(spawnedEnemy1);
+                enemyDigimonList.Add(spawnedEnemy1);
             }
             else if (i == 1)
             {
                 // Spawns the enemy
-                GameObject spawnedEnemy2 = Instantiate(enemyDigimon, enemySpawnPoint[i].position, Quaternion.identity);
+                spawnedEnemy2 = Instantiate(enemyDigimon, enemySpawnPoint[i].position, Quaternion.identity);
                 enemyDigimon2 = spawnedEnemy2.GetComponent<Enemy>();
+                enemyDigimon2.currentHP = enemyDigimon2.stats.hp;
+                enemyDigimon2.currentSPD = enemyDigimon2.stats.spd;
+                enemy2HPSlider.maxValue = enemyDigimon2.stats.hp;
+                enemy2HPSlider.value = enemyDigimon2.currentHP;
+                spawnedEnemy2.GetComponent<SpriteRenderer>().sortingOrder = 2;
+                spawnedEnemy2.tag = "Enemy2";
 
                 digimonOnField.Add(spawnedEnemy2);
+                enemyDigimonList.Add(spawnedEnemy2);
             }
             if (i == 2)
             {
                 // Spawns the enemy
-                GameObject spawnedEnemy3 = Instantiate(enemyDigimon, enemySpawnPoint[i].position, Quaternion.identity);
+                spawnedEnemy3 = Instantiate(enemyDigimon, enemySpawnPoint[i].position, Quaternion.identity);
                 enemyDigimon3 = spawnedEnemy3.GetComponent<Enemy>();
+                enemyDigimon3.currentHP = enemyDigimon3.stats.hp;
+                enemyDigimon3.currentSPD = enemyDigimon3.stats.spd;
+                enemy3HPSlider.maxValue = enemyDigimon3.stats.hp;
+                enemy3HPSlider.value = enemyDigimon3.currentHP;
+                spawnedEnemy3.GetComponent<SpriteRenderer>().sortingOrder = 3;
+                spawnedEnemy3.tag = "Enemy3";
 
                 digimonOnField.Add(spawnedEnemy3);
+                enemyDigimonList.Add(spawnedEnemy3);
             }
         }
     }
@@ -324,10 +2000,14 @@ public class BattleManager : MonoBehaviour
                 onButton = 3;
             }
 
+            // Changes to Target State
             if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
             {
-                choosingEnemytoAttack = true;
-                uiState = UIState.Attack;
+                image.color = Color.white;
+                multiTarget = false;
+                usingAttack = true;
+                targetingEnemy = true;
+                uiState = UIState.Target;
             }
         }
         // If on Skill Button
@@ -344,6 +2024,13 @@ public class BattleManager : MonoBehaviour
                 image.color = Color.white;
                 onButton = 0;
             }
+
+            // Changes to Skills State
+            if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
+            {
+                image.color = Color.white;
+                uiState = UIState.Skills;
+            } 
         }
         // If on Guard Button
         else if (onButton == 2)
@@ -365,6 +2052,27 @@ public class BattleManager : MonoBehaviour
                 image.color = Color.white;
                 onButton = 3;
             }
+
+            // Digimon Guards
+            if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
+            {
+                image.color = Color.white;
+                if (playerDigimon1Turn)
+                {
+                    playerDigimon1.guarding = true;
+                    player1Shield.SetActive(true);
+                    Debug.Log($"{playerDigimon1.stats.name} is guarding.");
+                }
+                else if (playerDigimon2Turn)
+                {
+                    playerDigimon2.guarding = true;
+                    player2Shield.SetActive(true);
+                    Debug.Log($"{playerDigimon2.stats.name} is guarding.");
+                }
+                
+                uiState = UIState.Waiting;
+                state = BattleState.PlayerEndTurn;
+            }
         }
         // If on Item Button
         else if (onButton == 3)
@@ -380,57 +2088,619 @@ public class BattleManager : MonoBehaviour
                 image.color = Color.white;
                 onButton = 0;
             }
+
+            // Changes to Items State
+            if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
+            {
+                image.color = Color.white;
+                uiState = UIState.Items;
+            }
         }
     }
 
-    void EnemySelector()
+    public void ItemsUI()
+    {
+        float offset = 0.3f;
+
+        if (!itemMenuUp)
+        {
+            rootUI.SetActive(true);
+            itemUI.SetActive(true);
+            itemMenuUp = true;
+
+            Vector2 currentPos = itemSelectorBox.transform.position;
+            float yValue = itemUIButtons[onItemButton - 1].transform.position.y + offset;
+            Vector2 newPos = new Vector2(currentPos.x, yValue);
+            itemSelectorBox.transform.position = newPos;
+        }
+
+        // UI Navigation
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            if (onItemButton > 1)
+            {
+                onItemButton--;
+            }
+
+            Vector2 currentPos = itemSelectorBox.transform.position;
+            float yValue = itemUIButtons[onItemButton - 1].transform.position.y + offset;
+            Vector2 newPos = new Vector2(currentPos.x, yValue);
+            itemSelectorBox.transform.position = newPos;
+        }
+        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            if (onItemButton < itemUIButtons.Length)
+            {
+                onItemButton++;
+            }
+
+            Vector2 currentPos = itemSelectorBox.transform.position;
+            float yValue = itemUIButtons[onItemButton - 1].transform.position.y + offset;
+            Vector2 newPos = new Vector2(currentPos.x, yValue);
+            itemSelectorBox.transform.position = newPos;
+        }
+        else if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
+        {
+            if (onItemButton == 1)
+            {
+                if (hpCapsuleAmount > 0)
+                {
+                    onAlly = 1;
+                    targetingAlly = true;
+                    targetingForItem = true;
+                    uiState = UIState.Target;
+                    rootUI.SetActive(false);
+                    itemUI.SetActive(false);
+                    itemMenuUp = false;
+                }
+                else
+                {
+                    Debug.Log("You don't have any!");
+                }
+            }
+            else if (onItemButton == 2)
+            {
+                if (spCapsuleAmount > 0)
+                {
+                    onAlly = 1;
+                    targetingAlly = true;
+                    targetingForItem = true;
+                    uiState = UIState.Target;
+                    rootUI.SetActive(false);
+                    itemUI.SetActive(false);
+                    itemMenuUp = false;
+                }
+                else
+                {
+                    Debug.Log("You don't have any!");
+                }
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace))
+        {
+            itemUI.SetActive(false);
+            itemMenuUp = false;
+            uiState = UIState.Root;
+        }
+
+        if (onItemButton == 1)
+        {
+            itemDescriptionText.text = "Restores 750 HP for one ally.";
+        }
+        else if (onItemButton == 2)
+        {
+            itemDescriptionText.text = "Restores 90 SP for one ally.";
+        }
+
+        hpCapsuleAmountText.text = "x     " + hpCapsuleAmount.ToString();
+        spCapsuleAmountText.text = "x     " + spCapsuleAmount.ToString();
+
+    }
+
+    IEnumerator Item()
+    {
+        if (onItemButton == 1)
+        {
+            if (targetingAlly1)
+            {
+                Debug.Log("Player used Hp Capsule on Wargreymon!");
+
+                yield return new WaitForSeconds(1f);
+
+                playerDigimon1.currentHP += 750;
+
+                if (playerDigimon1.currentHP > playerDigimon1.stats.hp)
+                {
+                    playerDigimon1.currentHP = playerDigimon1.stats.hp;
+                }
+
+                player1HPSlider.value = playerDigimon1.currentHP;
+                hpCapsuleAmount--;
+            }
+            else if (targetingAlly2)
+            {
+                Debug.Log("Player used Hp Capsule on Metalgarurumon!");
+
+                yield return new WaitForSeconds(1f);
+
+                playerDigimon2.currentHP += 750;
+
+                if (playerDigimon2.currentHP > playerDigimon2.stats.hp)
+                {
+                    playerDigimon2.currentHP = playerDigimon2.stats.hp;
+                }
+
+                player2HPSlider.value = playerDigimon2.currentHP;
+                hpCapsuleAmount--;
+            }
+        }
+        else if (onItemButton == 2)
+        {
+            if (targetingAlly1)
+            {
+                Debug.Log("Player used Sp Capsule on Wargreymon!");
+
+                yield return new WaitForSeconds(1f);
+
+                playerDigimon1.currentSP += 90;
+
+                if (playerDigimon1.currentSP > playerDigimon1.stats.sp)
+                {
+                    playerDigimon1.currentSP = playerDigimon1.stats.sp;
+                }
+
+                player1SPSlider.value = playerDigimon1.currentSP;
+                spCapsuleAmount--;
+            }
+            else if (targetingAlly2)
+            {
+                Debug.Log("Player used Sp Capsule on MetalGarurumon!");
+
+                yield return new WaitForSeconds(1f);
+
+                playerDigimon2.currentSP += 90;
+
+                if (playerDigimon2.currentSP > playerDigimon2.stats.sp)
+                {
+                    playerDigimon2.currentSP = playerDigimon2.stats.sp;
+                }
+
+                player2SPSlider.value = playerDigimon2.currentSP;
+                spCapsuleAmount--;
+            }
+
+        }
+
+        yield return new WaitForSeconds(1f);
+
+        state = BattleState.PlayerEndTurn;
+    }
+
+    void SkillsUI()
+    {
+        if (playerDigimon1Turn)
+        {
+            skill1Name.text = playerDigimon1.stats.skill1Name;
+            skill1Cost.text = playerDigimon1.stats.skill1Cost.ToString();
+
+            skill2Name.text = playerDigimon1.stats.skill2Name;
+            skill2Cost.text = playerDigimon1.stats.skill2Cost.ToString();
+
+            //skill3Name.text = playerDigimon1.stats.skill3Name;
+            //skill3Cost.text = playerDigimon1.stats.skill3Cost.ToString();
+
+            if (onSkillButton == 1)
+            {
+                skillDescriptionText.text = playerDigimon1.stats.skill1Description;
+            }
+            else if (onSkillButton == 2)
+            {
+                skillDescriptionText.text = playerDigimon1.stats.skill2Description;
+            }
+            //else
+            //{
+            //    skillDescriptionText.text = playerDigimon1.stats.skill3Description;
+            //}
+        }
+        else if (playerDigimon2Turn)
+        {
+            skill1Name.text = playerDigimon2.stats.skill1Name;
+            skill1Cost.text = playerDigimon2.stats.skill1Cost.ToString();
+
+            skill2Name.text = playerDigimon2.stats.skill2Name;
+            skill2Cost.text = playerDigimon2.stats.skill2Cost.ToString();
+
+            //skill3Name.text = playerDigimon1.stats.skill3Name;
+            //skill3Cost.text = playerDigimon1.stats.skill3Cost.ToString();
+
+            if (onSkillButton == 1)
+            {
+                skillDescriptionText.text = playerDigimon2.stats.skill1Description;
+            }
+            else if (onSkillButton == 2)
+            {
+                skillDescriptionText.text = playerDigimon2.stats.skill2Description;
+            }
+            //else
+            //{
+            //    skillDescriptionText.text = playerDigimon1.stats.skill3Description;
+            //}
+        }
+
+        if (!skillMenuUp)
+        {
+            rootUI.SetActive(true);
+            skillsUI.SetActive(true);
+            skillMenuUp = true;
+        }
+
+        Image image = skillsUIButtons[onSkillButton - 1].GetComponent<Image>();
+
+        image.color = Color.gray;
+
+        // UI Navigation
+        if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+        {
+            if (onSkillButton > 1)
+            {
+                image.color = Color.white;
+                onSkillButton--;
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+        {
+            if (onSkillButton < skillsUIButtons.Length)
+            {
+                image.color = Color.white;
+                onSkillButton++;
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
+        {
+            if (playerDigimon1Turn)
+            {
+                if (onSkillButton == 1)
+                {
+                    if (playerDigimon1.currentSP > playerDigimon1.stats.skill1Cost)
+                    {
+                        image.color = Color.white;
+                        multiTarget = playerDigimon1.stats.skill1MultiTarget;
+                        targetingEnemy = true;
+                        usingSkill = true;
+                        uiState = UIState.Target;
+                        rootUI.SetActive(false);
+                        skillsUI.SetActive(false);
+                        skillMenuUp = false;
+                    }
+                    else
+                    {
+                        Debug.Log("Not Enough SP!");
+                    }
+
+                }
+                if (onSkillButton == 2)
+                {
+                    if (playerDigimon1.currentSP > playerDigimon1.stats.skill2Cost)
+                    {
+                        image.color = Color.white;
+                        multiTarget = playerDigimon1.stats.skill2MultiTarget;
+                        targetingEnemy = true;
+                        usingSkill = true;
+                        uiState = UIState.Target;
+                        rootUI.SetActive(false);
+                        skillsUI.SetActive(false);
+                        skillMenuUp = false;
+                    }
+                    else
+                    {
+                        Debug.Log("Not Enough SP!");
+                    }
+                }
+                //else if (onSkillButton == 3)
+                //{
+                //    if (playerDigimon1.currentSP > playerDigimon1.stats.skill3Cost)
+                //    {
+                //        multiTarget = playerDigimon1.stats.skill3MultiTarget;
+                //        targetingEnemy = false;
+                //        usingSkill = true;
+                //        uiState = UIState.Target;
+                //        skillsUI.SetActive(false);
+                //        skillMenuUp = false;
+                //    }
+                //    else
+                //    {
+                //        Debug.Log("Not Enough SP!");
+                //    }
+                //}
+            }
+            else if (playerDigimon2Turn)
+            {
+                if (onSkillButton == 1)
+                {
+                    if (playerDigimon2.currentSP > playerDigimon2.stats.skill1Cost)
+                    {
+                        image.color = Color.white;
+                        multiTarget = playerDigimon2.stats.skill1MultiTarget;
+                        targetingEnemy = true;
+                        usingSkill = true;
+                        uiState = UIState.Target;
+                        rootUI.SetActive(false);
+                        skillsUI.SetActive(false);
+                        skillMenuUp = false;
+                    }
+                    else
+                    {
+                        Debug.Log("Not Enough SP!");
+                    }
+
+                }
+                if (onSkillButton == 2)
+                {
+                    if (playerDigimon2.currentSP > playerDigimon2.stats.skill2Cost)
+                    {
+                        image.color = Color.white;
+                        multiTarget = playerDigimon2.stats.skill2MultiTarget;
+                        targetingEnemy = true;
+                        usingSkill = true;
+                        uiState = UIState.Target;
+                        rootUI.SetActive(false);
+                        skillsUI.SetActive(false);
+                        skillMenuUp = false;
+                    }
+                    else
+                    {
+                        Debug.Log("Not Enough SP!");
+                    }
+                }
+                //else if (onSkillButton == 3)
+                //{
+                //    if (playerDigimon1.currentSP > playerDigimon1.stats.skill3Cost)
+                //    {
+                //        multiTarget = playerDigimon1.stats.skill3MultiTarget;
+                //        targetingEnemy = false;
+                //        usingSkill = true;
+                //        uiState = UIState.Target;
+                //        skillsUI.SetActive(false);
+                //        skillMenuUp = false;
+                //    }
+                //    else
+                //    {
+                //        Debug.Log("Not Enough SP!");
+                //    }
+                //}
+            }
+        }
+        else if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace))
+        {
+            image.color = Color.white;
+            skillsUI.SetActive(false);
+            skillMenuUp = false;
+            uiState = UIState.Root;
+        }
+    }
+
+    void Selector()
     {
         float t = Mathf.PingPong(Time.time * indicatorScaleSpeed, 1f);
 
-        enemyIndicator.SetActive(true);
-
-        enemyIndicator.transform.position = enemySpawnPoint[onEnemy].position;
-        enemyIndicator.transform.Rotate(0f, 0f, indicatorRotateSpeed * Time.deltaTime);
-        enemyIndicator.transform.localScale = Vector3.Lerp(indicatorMinScale, indicatorMaxScale, t);
-
-        // For navigating multiple enemies
-        //if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
-        //{
-        //    if (enemies.Count > 0 && onEnemy > 0)
-        //    {
-        //        onEnemy -= 1;
-        //    }
-        //}
-
-        //if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
-        //{
-        //    if (onEnemy < enemies.Count)
-        //    {
-        //        onEnemy += 1;
-        //    }
-        //}
-
-        if (choosingEnemytoAttack)
+        if (targetingEnemy)
         {
-            if (Input.GetKeyDown(KeyCode.Z))
+            if (!multiTarget)
             {
-                enemyIndicator.SetActive(false);
-                rootUI.SetActive(false);
+                enemyIndicator1.SetActive(true);
 
-                attacking = true;
-                choosingEnemytoAttack = false;
-                uiState = UIState.Waiting;
+                enemyIndicator1.transform.position = enemyDigimonList[onEnemy - 1].transform.position;
+                enemyIndicator1.transform.Rotate(0f, 0f, indicatorRotateSpeed * Time.deltaTime);
+                enemyIndicator1.transform.localScale = Vector3.Lerp(indicatorMinScale, indicatorMaxScale, t);
+
+                // For navigating enemies
+                if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+                {
+                    if (onEnemy > 1)
+                    {
+                        onEnemy--;
+                    }
+                }
+
+                if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+                {
+                    if (onEnemy < enemyDigimonList.Count)
+                    {
+                        onEnemy++;
+                    }
+                }
+
+
+                if (usingAttack)
+                {
+                    if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
+                    {
+                        if (enemyDigimonList[onEnemy - 1].tag == "Enemy1")
+                        {
+                            attackingEnemy1 = true;
+                            enemy2HPBar.SetActive(false);
+                            enemy3HPBar.SetActive(false);
+                        }
+                        else if (enemyDigimonList[onEnemy - 1].tag == "Enemy2")
+                        {
+                            attackingEnemy2 = true;
+                            enemy1HPBar.SetActive(false);
+                            enemy3HPBar.SetActive(false);
+                        }
+                        else if (enemyDigimonList[onEnemy - 1].tag == "Enemy3")
+                        {
+                            attackingEnemy3 = true;
+                            enemy1HPBar.SetActive(false);
+                            enemy2HPBar.SetActive(false);
+                        }
+
+                        enemyIndicator1.SetActive(false);
+                        rootUI.SetActive(false);
+
+                        attacking = true;
+                        targetingEnemy = false;
+                        uiState = UIState.Waiting;
+
+
+                    }
+
+                    if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace))
+                    {
+                        enemyIndicator1.SetActive(false);
+
+                        usingAttack = false;
+                        targetingEnemy = false;
+                        uiState = UIState.Root;
+                    }
+                }
+                else if (usingSkill)
+                {
+                    if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
+                    {
+                        if (enemyDigimonList[onEnemy - 1].tag == "Enemy1")
+                        {
+                            attackingEnemy1 = true;
+                            enemy2HPBar.SetActive(false);
+                            enemy3HPBar.SetActive(false);
+                        }
+                        else if (enemyDigimonList[onEnemy - 1].tag == "Enemy2")
+                        {
+                            attackingEnemy2 = true;
+                            enemy1HPBar.SetActive(false);
+                            enemy3HPBar.SetActive(false);
+                        }
+                        else if (enemyDigimonList[onEnemy - 1].tag == "Enemy3")
+                        {
+                            attackingEnemy3 = true;
+                            enemy1HPBar.SetActive(false);
+                            enemy2HPBar.SetActive(false);
+                        }
+                        enemyIndicator1.SetActive(false);
+                        rootUI.SetActive(false);
+
+                        attacking = true;
+                        targetingEnemy = false;
+                        uiState = UIState.Waiting;
+                    }
+
+                    if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace))
+                    {
+                        enemyIndicator1.SetActive(false);
+
+                        usingSkill = false;
+                        targetingEnemy = false;
+                        uiState = UIState.Skills;
+                    }
+                }
             }
-
-            if (Input.GetKeyDown(KeyCode.X))
+            else
             {
-                enemyIndicator.SetActive(false);
+                if (enemyDigimon1)
+                {
+                    enemyIndicator1.SetActive(true);
 
-                choosingEnemytoAttack = false;
-                uiState = UIState.Root;
+                    enemyIndicator1.transform.position = enemySpawnPoint[0].position;
+                    enemyIndicator1.transform.Rotate(0f, 0f, indicatorRotateSpeed * Time.deltaTime);
+                    enemyIndicator1.transform.localScale = Vector3.Lerp(indicatorMinScale, indicatorMaxScale, t);
+                }
+
+                if (enemyDigimon2)
+                {
+                    enemyIndicator2.SetActive(true);
+
+                    enemyIndicator2.transform.position = enemySpawnPoint[1].position;
+                    enemyIndicator2.transform.Rotate(0f, 0f, indicatorRotateSpeed * Time.deltaTime);
+                    enemyIndicator2.transform.localScale = Vector3.Lerp(indicatorMinScale, indicatorMaxScale, t);
+                }
+
+                if (enemyDigimon3)
+                {
+                    enemyIndicator3.SetActive(true);
+
+                    enemyIndicator3.transform.position = enemySpawnPoint[2].position;
+                    enemyIndicator3.transform.Rotate(0f, 0f, indicatorRotateSpeed * Time.deltaTime);
+                    enemyIndicator3.transform.localScale = Vector3.Lerp(indicatorMinScale, indicatorMaxScale, t);
+                }
+
+                if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
+                {
+                    enemyIndicator1.SetActive(false);
+                    enemyIndicator2.SetActive(false);
+                    enemyIndicator3.SetActive(false);
+                    rootUI.SetActive(false);
+
+                    attacking = true;
+                    targetingEnemy = false;
+                    uiState = UIState.Waiting;
+                }
+                if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace))
+                {
+                    enemyIndicator1.SetActive(false);
+                    enemyIndicator2.SetActive(false);
+                    enemyIndicator3.SetActive(false);
+
+                    usingSkill = false;
+                    targetingEnemy = false;
+                    uiState = UIState.Skills;
+                }
+
+            }
+        }
+        else
+        {
+            if (targetingForItem)
+            {
+                allyIndicator1.SetActive(true);
+
+                allyIndicator1.transform.position = playerDigimonSpawnPoint[onAlly - 1].position;
+                allyIndicator1.transform.Rotate(0f, 0f, indicatorRotateSpeed * Time.deltaTime);
+                allyIndicator1.transform.localScale = Vector3.Lerp(indicatorMinScale, indicatorMaxScale, t);
+
+                // For navigating allies
+                if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
+                {
+                    if (onAlly > 1)
+                    {
+                        onAlly--;
+                    }
+                }
+                if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
+                {
+                    if (onAlly < allyDigimonList.Count)
+                    {
+                        onAlly++;
+                    }
+                }
+                if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
+                {
+                    if (allyDigimonList[onAlly - 1].tag == "Player1")
+                    {
+                        targetingAlly1 = true;
+                    }
+                    else if (allyDigimonList[onAlly - 1].tag == "Player2")
+                    {
+                        targetingAlly2 = true;
+                    }
+
+                    allyIndicator1.SetActive(false);
+                    rootUI.SetActive(false);
+
+                    targetingForItem = false;
+                    usingItem = true;
+                    targetingAlly = false;
+                    uiState = UIState.Waiting;
+                }
+                if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace))
+                {
+                    allyIndicator1.SetActive(false);
+                    rootUI.SetActive(true);
+                    itemUI.SetActive(true);
+
+                    targetingForItem = false;
+                    targetingAlly = false;
+                    uiState = UIState.Items;
+                }
             }
         }
     }
-
-
 }

@@ -19,7 +19,7 @@ public class test : MonoBehaviour
         GameObject spawnedEnemy = Instantiate(enemyDigimon, spawnPoint.position, Quaternion.identity);
         enemy = spawnedEnemy.GetComponent<Enemy>();
 
-        enemy.stats.hp *= 2;
+        //enemy.stats.hp *= 2;
     }
 
     // Update is called once per frame

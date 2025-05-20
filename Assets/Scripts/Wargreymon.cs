@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class Wargreymon : Ally
 {
+
     // Start is called before the first frame update
     void Start()
     {
@@ -13,7 +14,7 @@ public class Wargreymon : Ally
     protected override void AllyIntro()
     {
         base.AllyIntro();
-        Debug.Log($"{stats.digimonName} enters battle with {stats.currentHP} HP.");
+        Debug.Log($"{stats.digimonName} enters battle with {currentHP} HP.");
     }
 
     // Update is called once per frame

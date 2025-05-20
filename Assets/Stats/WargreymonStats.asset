@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 387f68be94f135243882db9bf0427b16, type: 3}
+  m_Name: WargreymonStats
+  m_EditorClassIdentifier: 
+  digimonName: WarGreymon
+  currentHP: 2130
+  hp: 2220
+  currentSP: 0
+  sp: 137
+  atk: 257
+  intel: 138
+  def: 222
+  spd: 189
+  skill1Name: Terra Force
+  skill1Type: Physical
+  skill1Description: Physical attack, 90 Fire damage to all foes. 30% chance of increasing
+    ATK by 20%.
+  skill1Power: 90
+  skill1Cost: 20
+  skill1MultiTarget: 1
+  skill2Name: Great Tornado
+  skill2Type: Physical
+  skill2Description: DEF-penetrating strong Neutral attack on one foe.
+  skill2Power: 0
+  skill2Cost: 35
+  skill2MultiTarget: 0
+  skill3Name: Attack Charge Field
+  skill3Type: Support
+  skill3Description: Increases ATK of all battle members by 10%.
+  skill3Power: 0
+  skill3Cost: 20
+  skill3MultiTarget: 1

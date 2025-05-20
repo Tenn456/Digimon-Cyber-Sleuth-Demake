@@ -7,8 +7,6 @@ public class GameManager : MonoBehaviour
 {
     public static GameManager Instance;
 
-    public WargreymonStats playerDigimon;
-
     public Vector3 playerPosition;
 
     // Example encounter data
