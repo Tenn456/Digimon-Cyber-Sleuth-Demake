@@ -16,6 +16,7 @@ public class Ally : MonoBehaviour
 
     public bool atkBuffed;
     public bool guarding;
+    public bool alive = true;
 
     protected virtual void AllyIntro()
     {

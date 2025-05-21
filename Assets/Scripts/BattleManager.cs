@@ -57,6 +57,11 @@ public class BattleManager : MonoBehaviour
     public Vector3 enemy3DamageBotPosition;
     public Vector3 player1DamageBotPosition;
     public Vector3 player2DamageBotPosition;
+    public Vector3 player1StartPos;
+    public Vector3 player2StartPos;
+    public Vector3 enemy1StartPos;
+    public Vector3 enemy2StartPos;
+    public Vector3 enemy3StartPos;
 
     public List<GameObject> digimonOnField = new List<GameObject>();
     public List<GameObject> allyDigimonList = new List<GameObject>();
@@ -87,10 +92,20 @@ public class BattleManager : MonoBehaviour
     public TextMeshProUGUI damageToEnemy3Text;
     public TextMeshProUGUI damageToPlayer1Text;
     public TextMeshProUGUI damageToPlayer2Text;
+    public TextMeshProUGUI healtoPlayer1Text;
+    public TextMeshProUGUI healtoPlayer2Text;
+    public TextMeshProUGUI spToPlayer1Text;
+    public TextMeshProUGUI spToPlayer2Text;
 
     public VideoPlayer videoPlayer;
     public VideoClip terraForce;
+    public VideoClip greatTornado;
     public VideoClip IceWolfClaw;
+    public VideoClip freezingBreath;
+    public VideoClip infinityCannon;
+    public VideoClip forbiddenTrident;
+    public VideoClip nightRaid;
+    public VideoClip tidalWave;
 
     public Slider player1HPSlider;
     public Slider player2HPSlider;
@@ -106,6 +121,13 @@ public class BattleManager : MonoBehaviour
     public Enemy enemyDigimon1;
     public Enemy enemyDigimon2;
     public Enemy enemyDigimon3;
+
+    public AudioSource audioSource;
+    public AudioClip moveButtons;
+    public AudioClip backButton;
+    public AudioClip selectButton;
+    public AudioClip hit;
+    public AudioClip heal;
 
     public int enemiesSpawned;
     public int targetDigimon;
@@ -142,8 +164,6 @@ public class BattleManager : MonoBehaviour
     public bool attackingEnemy2;
     public bool attackingEnemy3;
     public bool started;
-    public bool player1Alive = true;
-    public bool player2Alive = true;
     public bool enemyUsingSkill;
     public bool enemyGuarding;
     public bool usingItem;
@@ -154,6 +174,10 @@ public class BattleManager : MonoBehaviour
     public bool damageDealt;
     public bool enemyAttackingP1;
     public bool enemyAttackingP2;
+    public bool enemyUsingAttack;
+    public bool playerUsingAttack;
+    public bool playerHealing;
+    public bool playerSpGain;
 
     public bool skillMenuUp;
     public bool itemMenuUp;
@@ -162,7 +186,8 @@ public class BattleManager : MonoBehaviour
     public bool p2UiUp;
     public bool damageGoingUp = true;
     public bool damageGoingDown;
-
+    public bool damageGoingUp1 = true;
+    public bool damageGoingDown1;
     public float pierceMultiplier = 1.8f;
 
     public float indicatorRotateSpeed;
@@ -170,7 +195,7 @@ public class BattleManager : MonoBehaviour
     public float elapsedTime;
     public float elapsedTimeDamage;
     public float playerUiDuration = 0.3f;
-    public float damageDuration = 0f;
+    public float damageDuration = 0.5f;
 
     public Vector3 indicatorMinScale;
     public Vector3 indicatorMaxScale;
@@ -189,6 +214,8 @@ public class BattleManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        audioSource = GetComponent<AudioSource>();
+
         // Ui Menus
         rootUI.SetActive(false);
         skillsUI.SetActive(false);
@@ -230,6 +257,19 @@ public class BattleManager : MonoBehaviour
         player1DamageBotPosition = damageToPlayer1Text.transform.position;
         player2DamageBotPosition = damageToPlayer2Text.transform.position;
 
+        // Heal Text
+        healtoPlayer1Text.text = "";
+        healtoPlayer2Text.text = "";
+
+        healtoPlayer1Text.transform.position = new Vector2(playerDigimonSpawnPoint[0].position.x, playerDigimonSpawnPoint[0].position.y + textOffsetY);
+        healtoPlayer2Text.transform.position = new Vector2(playerDigimonSpawnPoint[1].position.x, playerDigimonSpawnPoint[1].position.y + textOffsetY);
+
+        // SP Text
+        spToPlayer1Text.text = "";
+        spToPlayer2Text.text = "";
+
+        spToPlayer1Text.transform.position = new Vector2(playerDigimonSpawnPoint[0].position.x, playerDigimonSpawnPoint[0].position.y + textOffsetY);
+        spToPlayer2Text.transform.position = new Vector2(playerDigimonSpawnPoint[1].position.x, playerDigimonSpawnPoint[1].position.y + textOffsetY);
 
         // Enemy HP Bar
         enemy1HPBar.SetActive(false);
@@ -274,39 +314,6 @@ public class BattleManager : MonoBehaviour
             player2HP.text = playerDigimon2.currentHP.ToString();
             player2SP.text = playerDigimon2.currentSP.ToString();
             player2Name.text = playerDigimon2.stats.digimonName.ToString();
-        }
-        if (enemyDigimon1)
-        {
-            enemy1HP.text = "E1 HP: " + enemyDigimon1.currentHP.ToString();
-
-            if (enemyDigimon1.currentHP <= 0)
-            {
-                digimonOnField.Remove(spawnedEnemy1);
-                enemyDigimonList.Remove(spawnedEnemy1);
-                Destroy(spawnedEnemy1);
-            }
-        }
-        if (enemyDigimon2)
-        {
-            enemy2HP.text = "E2 HP: " + enemyDigimon2.currentHP.ToString();
-
-            if (enemyDigimon2.currentHP <= 0)
-            {
-                digimonOnField.Remove(spawnedEnemy2);
-                enemyDigimonList.Remove(spawnedEnemy2);
-                Destroy(spawnedEnemy2);
-            }
-        }
-        if (enemyDigimon3)
-        {
-            enemy3HP.text = "E3 HP: " + enemyDigimon3.currentHP.ToString();
-
-            if (enemyDigimon3.currentHP <= 0)
-            {
-                digimonOnField.Remove(spawnedEnemy3);
-                enemyDigimonList.Remove(spawnedEnemy3);
-                Destroy(spawnedEnemy3);
-            }
         }
 
         if (state == BattleState.Start)
@@ -568,7 +575,332 @@ public class BattleManager : MonoBehaviour
                     }
                 }
             }
+        }
 
+        if (playerUsingAttack)
+        {
+            if (playerDigimon1Turn)
+            {
+                Vector3 attackPosition = player1StartPos + Vector3.right * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedAlly1.transform.position = Vector3.MoveTowards(spawnedAlly1.transform.position, attackPosition, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedAlly1.transform.position = Vector3.MoveTowards(spawnedAlly1.transform.position, player1StartPos, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                        elapsedTimeDamage = 0;
+                        playerUsingAttack = false;
+                    }
+                }
+            }
+            if (playerDigimon2Turn)
+            {
+                Vector3 attackPosition = player2StartPos + Vector3.right * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedAlly2.transform.position = Vector3.MoveTowards(spawnedAlly2.transform.position, attackPosition, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedAlly2.transform.position = Vector3.MoveTowards(spawnedAlly2.transform.position, player2StartPos, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                        elapsedTimeDamage = 0;
+                        playerUsingAttack = false;
+                    }
+                }
+            }
+        }
+
+        if (enemyUsingAttack)
+        {
+            if (enemyDigimon1Turn)
+            {
+                Vector3 attackPosition = enemy1StartPos - Vector3.right * 0.5f;
+
+                if (damageGoingUp1)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedEnemy1.transform.position = Vector3.MoveTowards(spawnedEnemy1.transform.position, attackPosition, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingUp1 = false;
+                        damageGoingDown1 = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown1)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedEnemy1.transform.position = Vector3.MoveTowards(spawnedEnemy1.transform.position, enemy1StartPos, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingDown1 = false;
+                        damageGoingUp1 = true;
+                        elapsedTimeDamage = 0;
+                        enemyUsingAttack = false;
+                    }
+                }
+            }
+            if (enemyDigimon2Turn)
+            {
+                Vector3 attackPosition = enemy2StartPos - Vector3.right * 0.5f;
+
+                if (damageGoingUp1)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedEnemy2.transform.position = Vector3.MoveTowards(spawnedEnemy2.transform.position, attackPosition, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingUp1 = false;
+                        damageGoingDown1 = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown1)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedEnemy2.transform.position = Vector3.MoveTowards(spawnedEnemy2.transform.position, enemy2StartPos, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingDown1 = false;
+                        damageGoingUp1 = true;
+                        elapsedTimeDamage = 0;
+                        enemyUsingAttack = false;
+                    }
+                }
+            }
+            if (enemyDigimon3Turn)
+            {
+                Vector3 attackPosition = enemy3StartPos - Vector3.right * 0.5f;
+
+                if (damageGoingUp1)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedEnemy3.transform.position = Vector3.MoveTowards(spawnedEnemy3.transform.position, attackPosition, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingUp1 = false;
+                        damageGoingDown1 = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown1)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage);
+
+                    spawnedEnemy3.transform.position = Vector3.MoveTowards(spawnedEnemy3.transform.position, enemy3StartPos, t);
+
+                    if (t >= 0.3f)
+                    {
+                        damageGoingDown1 = false;
+                        damageGoingUp1 = true;
+                        elapsedTimeDamage = 0;
+                        enemyUsingAttack = false;
+                    }
+                }
+            }
+        }
+
+        if (playerHealing)
+        {
+            if (playerDigimon1)
+            {
+                Vector3 damageTopPosition = player1DamageBotPosition + Vector3.up * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    healtoPlayer1Text.transform.position = Vector3.Lerp(healtoPlayer1Text.transform.position, damageTopPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    healtoPlayer1Text.transform.position = Vector3.MoveTowards(healtoPlayer1Text.transform.position, player1DamageBotPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        elapsedTimeDamage = 0;
+
+                        playerHealing = false;
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                    }
+                }
+            }
+            if (playerDigimon2)
+            {
+                Vector3 damageTopPosition = player2DamageBotPosition + Vector3.up * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    healtoPlayer2Text.transform.position = Vector3.Lerp(healtoPlayer2Text.transform.position, damageTopPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    healtoPlayer2Text.transform.position = Vector3.MoveTowards(healtoPlayer2Text.transform.position, player2DamageBotPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        elapsedTimeDamage = 0;
+
+                        playerHealing = false;
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                    }
+                }
+            }
+        }
+
+        if (playerSpGain)
+        {
+            if (playerDigimon1)
+            {
+                Vector3 damageTopPosition = player1DamageBotPosition + Vector3.up * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    spToPlayer1Text.transform.position = Vector3.Lerp(spToPlayer1Text.transform.position, damageTopPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    spToPlayer1Text.transform.position = Vector3.MoveTowards(spToPlayer1Text.transform.position, player1DamageBotPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        elapsedTimeDamage = 0;
+
+                        playerSpGain = false;
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                    }
+                }
+            }
+            if (playerDigimon2)
+            {
+                Vector3 damageTopPosition = player2DamageBotPosition + Vector3.up * 0.5f;
+
+                if (damageGoingUp)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    spToPlayer2Text.transform.position = Vector3.Lerp(spToPlayer2Text.transform.position, damageTopPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        damageGoingUp = false;
+                        damageGoingDown = true;
+                        elapsedTimeDamage = 0;
+                    }
+                }
+                else if (damageGoingDown)
+                {
+                    elapsedTimeDamage += Time.deltaTime;
+                    float t = Mathf.Clamp01(elapsedTimeDamage / damageDuration);
+
+                    spToPlayer2Text.transform.position = Vector3.MoveTowards(spToPlayer2Text.transform.position, player2DamageBotPosition, t);
+
+                    if (t >= 0.2f)
+                    {
+                        elapsedTimeDamage = 0;
+
+                        playerSpGain = false;
+                        damageGoingDown = false;
+                        damageGoingUp = true;
+                    }
+                }
+            }
         }
     }
 
@@ -634,7 +966,7 @@ public class BattleManager : MonoBehaviour
 
     public void TurnCheck()
     {
-        if (!player1Alive && !player2Alive)
+        if (!playerDigimon1.alive && !playerDigimon2.alive)
         {
             state = BattleState.Lost;
             StartCoroutine(EndBattle());
@@ -950,10 +1282,13 @@ public class BattleManager : MonoBehaviour
             if (attackingEnemy1)
             {
                 Debug.Log($"{playerDigimon1.stats.digimonName} attacks {enemyDigimon1.stats.digimonName}!");
+                playerUsingAttack = true;
 
                 yield return new WaitForSeconds(1f);
 
                 DamageCalculation();
+
+                audioSource.PlayOneShot(hit);
 
                 damageDealt = true;
 
@@ -963,11 +1298,13 @@ public class BattleManager : MonoBehaviour
             else if (attackingEnemy2)
             {
                 Debug.Log($"{playerDigimon1.stats.digimonName} attacks {enemyDigimon2.stats.digimonName}!");
+                playerUsingAttack = true;
 
                 yield return new WaitForSeconds(1f);
 
                 DamageCalculation();
 
+                audioSource.PlayOneShot(hit);
                 damageDealt = true;
 
                 Debug.Log($"{enemyDigimon2.stats.digimonName} has {enemyDigimon2.currentHP} HP left!");
@@ -975,11 +1312,13 @@ public class BattleManager : MonoBehaviour
             else if (attackingEnemy3)
             {
                 Debug.Log($"{playerDigimon1.stats.digimonName} attacks {enemyDigimon3.stats.digimonName}!");
+                playerUsingAttack = true;
 
                 yield return new WaitForSeconds(1f);
 
                 DamageCalculation();
 
+                audioSource.PlayOneShot(hit);
                 damageDealt = true;
 
                 Debug.Log($"{enemyDigimon3.stats.digimonName} has {enemyDigimon3.currentHP} HP left!");
@@ -990,11 +1329,13 @@ public class BattleManager : MonoBehaviour
             if (attackingEnemy1)
             {
                 Debug.Log($"{playerDigimon2.stats.digimonName} attacks {enemyDigimon1.stats.digimonName}!");
+                playerUsingAttack = true;
 
                 yield return new WaitForSeconds(1f);
 
                 DamageCalculation();
 
+                audioSource.PlayOneShot(hit);
                 damageDealt = true;
 
                 Debug.Log($"{enemyDigimon1.stats.digimonName} has {enemyDigimon1.currentHP} HP left!");
@@ -1003,11 +1344,13 @@ public class BattleManager : MonoBehaviour
             else if (attackingEnemy2)
             {
                 Debug.Log($"{playerDigimon2.stats.digimonName} attacks {enemyDigimon2.stats.digimonName}!");
+                playerUsingAttack = true;
 
                 yield return new WaitForSeconds(1f);
 
                 DamageCalculation();
 
+                audioSource.PlayOneShot(hit);
                 damageDealt = true;
 
                 Debug.Log($"{enemyDigimon2.stats.digimonName} has {enemyDigimon2.currentHP} HP left!");
@@ -1015,11 +1358,13 @@ public class BattleManager : MonoBehaviour
             else if (attackingEnemy3)
             {
                 Debug.Log($"{playerDigimon2.stats.digimonName} attacks {enemyDigimon3.stats.digimonName}!");
+                playerUsingAttack = true;
 
                 yield return new WaitForSeconds(1f);
 
                 DamageCalculation();
 
+                audioSource.PlayOneShot(hit);
                 damageDealt = true;
 
                 Debug.Log($"{enemyDigimon3.stats.digimonName} has {enemyDigimon3.currentHP} HP left!");
@@ -1068,6 +1413,7 @@ public class BattleManager : MonoBehaviour
 
                 DamageCalculation();
 
+                audioSource.PlayOneShot(hit);
                 damageDealt = true;
 
             }
@@ -1076,34 +1422,46 @@ public class BattleManager : MonoBehaviour
                 playerDigimon1.currentSP -= playerDigimon1.stats.skill2Cost;
                 player1SPSlider.value = playerDigimon1.currentSP;
 
+                videoPlayer.clip = greatTornado;
+                videoPlayer.Play();
+
                 if (attackingEnemy1)
                 {
                     Debug.Log($"{playerDigimon1.stats.digimonName} uses {playerDigimon1.stats.skill2Name} on {enemyDigimon1.stats.digimonName}!");
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(3f);
+
+                    videoPlayer.Stop();
 
                     DamageCalculation();
 
+                    audioSource.PlayOneShot(hit);
                     damageDealt = true;
                 }
                 else if (attackingEnemy2)
                 {
                     Debug.Log($"{playerDigimon1.stats.digimonName} uses {playerDigimon1.stats.skill2Name} on {enemyDigimon2.stats.digimonName}!");
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(3f);
+
+                    videoPlayer.Stop();
 
                     DamageCalculation();
 
+                    audioSource.PlayOneShot(hit);
                     damageDealt = true;
                 }
                 else if (attackingEnemy3)
                 {
                     Debug.Log($"{playerDigimon1.stats.digimonName} uses {playerDigimon1.stats.skill2Name} on {enemyDigimon3.stats.digimonName}!");
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(3f);
+
+                    videoPlayer.Stop();
 
                     DamageCalculation();
 
+                    audioSource.PlayOneShot(hit);
                     damageDealt = true;
                 }
             }
@@ -1119,36 +1477,50 @@ public class BattleManager : MonoBehaviour
                 playerDigimon2.currentSP -= playerDigimon2.stats.skill1Cost;
                 player2SPSlider.value = playerDigimon2.currentSP;
 
+                videoPlayer.clip = freezingBreath;
+                videoPlayer.Play();
+
                 if (attackingEnemy1)
                 {
                     Debug.Log($"{playerDigimon2.stats.digimonName} uses {playerDigimon2.stats.skill1Name} on {enemyDigimon1.stats.digimonName}!");
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(2f);
+
+                    videoPlayer.Stop();
 
                     DamageCalculation();
 
+                    audioSource.PlayOneShot(hit);
                     damageDealt = true;
                 }
                 else if (attackingEnemy2)
                 {
                     Debug.Log($"{playerDigimon2.stats.digimonName} uses {playerDigimon2.stats.skill1Name} on {enemyDigimon2.stats.digimonName}!");
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(2f);
+
+                    videoPlayer.Stop();
 
                     DamageCalculation();
 
+                    audioSource.PlayOneShot(hit);
                     damageDealt = true;
                 }
                 if (attackingEnemy3)
                 {
                     Debug.Log($"{playerDigimon2.stats.digimonName} uses {playerDigimon2.stats.skill1Name} on {enemyDigimon3.stats.digimonName}!");
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(2f);
+
+                    videoPlayer.Stop();
 
                     DamageCalculation();
 
+                    audioSource.PlayOneShot(hit);
                     damageDealt = true;
                 }
+
+                videoPlayer.Stop();
             }
             else if (onSkillButton == 2)
             {
@@ -1170,10 +1542,16 @@ public class BattleManager : MonoBehaviour
                     attackingEnemy3 = true;
                 }
 
-                yield return new WaitForSeconds(1f);
+                videoPlayer.clip = IceWolfClaw;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(2f);
+
+                videoPlayer.Stop();
 
                 DamageCalculation();
 
+                audioSource.PlayOneShot(hit);
                 damageDealt = true;
             }
             //else
@@ -1346,39 +1724,67 @@ public class BattleManager : MonoBehaviour
 
             if (randomTarget == 1)
             {
-                if (player1Alive)
+                if (playerDigimon1.alive)
                 {
                     enemyTargetDigimon = 1;
                     enemyAttackingP1 = true;
                     Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon1.stats.digimonName}!");
+                    enemyUsingAttack = true;
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(0.5f);
 
                     DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
                 }
                 else
                 {
                     enemyTargetDigimon = 2;
                     enemyAttackingP2 = true;
                     Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+                    enemyUsingAttack = true;
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(0.5f);
 
                     DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
                 }
             }
             else if (randomTarget == 2)
             {
-                enemyTargetDigimon = 2;
-                enemyAttackingP2 = true;
-                Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+                if (playerDigimon2.alive)
+                {
+                    enemyTargetDigimon = 2;
+                    enemyAttackingP2 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+                    enemyUsingAttack = true;
 
-                yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(0.5f);
 
-                DamageCalculation();
+                    DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
+                }
+                else
+                {
+                    enemyTargetDigimon = 1;
+                    enemyAttackingP1 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon1.stats.digimonName}!");
+                    enemyUsingAttack = true;
+
+                    yield return new WaitForSeconds(0.5f);
+
+                    DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
+                }
+
             }
-
-            enemyDigimon1Turn = false;
         }
         else if (enemyDigimon2Turn)
         {
@@ -1386,39 +1792,66 @@ public class BattleManager : MonoBehaviour
 
             if (randomTarget == 1)
             {
-                if (player1Alive)
+                if (playerDigimon1.alive)
                 {
                     enemyTargetDigimon = 1;
                     enemyAttackingP1 = true;
                     Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon1.stats.digimonName}!");
+                    enemyUsingAttack = true;
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(0.5f);
 
                     DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
                 }
                 else
                 {
                     enemyTargetDigimon = 2;
                     enemyAttackingP2 = true;
                     Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+                    enemyUsingAttack = true;
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(0.5f);
 
                     DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
                 }
             }
             else if (randomTarget == 2)
             {
-                enemyTargetDigimon = 2;
-                enemyAttackingP2 = true;
-                Debug.Log($"{enemyDigimon2.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+                if (playerDigimon2.alive)
+                {
+                    enemyTargetDigimon = 2;
+                    enemyAttackingP2 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+                    enemyUsingAttack = true;
 
-                yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(0.5f);
 
-                DamageCalculation();
+                    DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
+                }
+                else
+                {
+                    enemyTargetDigimon = 1;
+                    enemyAttackingP1 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon1.stats.digimonName}!");
+                    enemyUsingAttack = true;
+
+                    yield return new WaitForSeconds(0.5f);
+
+                    DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
+                }
             }
-
-            enemyDigimon2Turn = false;
         }
         else if (enemyDigimon3Turn)
         {
@@ -1426,48 +1859,83 @@ public class BattleManager : MonoBehaviour
 
             if (randomTarget == 1)
             {
-                if (player1Alive)
+                if (playerDigimon1.alive)
                 {
                     enemyTargetDigimon = 1;
                     enemyAttackingP1 = true;
                     Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon1.stats.digimonName}!");
+                    enemyUsingAttack = true;
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(0.5f);
 
                     DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
                 }
                 else
                 {
                     enemyTargetDigimon = 2;
                     enemyAttackingP2 = true;
                     Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+                    enemyUsingAttack = true;
 
-                    yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(0.5f);
 
                     DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
                 }
             }
             else if (randomTarget == 2)
             {
-                enemyTargetDigimon = 2;
-                enemyAttackingP2 = true;
-                Debug.Log($"{enemyDigimon3.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+                if (playerDigimon2.alive)
+                {
+                    enemyTargetDigimon = 2;
+                    enemyAttackingP2 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon2.stats.digimonName}!");
+                    enemyUsingAttack = true;
 
-                yield return new WaitForSeconds(1f);
+                    yield return new WaitForSeconds(0.5f);
 
-                DamageCalculation();
+                    DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
+                }
+                else
+                {
+                    enemyTargetDigimon = 1;
+                    enemyAttackingP1 = true;
+                    Debug.Log($"{enemyDigimon1.stats.digimonName} attacks {playerDigimon1.stats.digimonName}!");
+                    enemyUsingAttack = true;
+
+                    yield return new WaitForSeconds(0.5f);
+
+                    DamageCalculation();
+
+                    audioSource.PlayOneShot(hit);
+                    damageDealt = true;
+                }
             }
-
-            enemyDigimon3Turn = false;
         }
 
         yield return new WaitForSeconds(1f);
 
+        damageToPlayer1Text.text = "";
+        damageToPlayer2Text.text = "";
+
         enemyAttackingP1 = false;
         enemyAttackingP2 = false;
 
+        enemyUsingAttack = false;
+
         // Places Digimon to back of the turn que
         digimonOnField.RemoveAt(0);
+        enemyDigimon1Turn = false;
+        enemyDigimon2Turn = false;
+        enemyDigimon3Turn = false;
         enemyTurn = false;
         TurnCheck();
     }
@@ -1480,9 +1948,98 @@ public class BattleManager : MonoBehaviour
             {
                 Debug.Log("Machinedramon uses Infinity Cannon!");
 
-                yield return new WaitForSeconds(1f);
+                videoPlayer.clip = infinityCannon;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(1.5f);
+
+                videoPlayer.Stop();
 
                 enemyDigimon1.InfinityCannon();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
+            }
+
+            if (enemyDigimon1.stats.digimonName == "Myotismon")
+            {
+                Debug.Log("Myotismon uses Night Raid!");
+
+                videoPlayer.clip = nightRaid;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(1.5f);
+
+                videoPlayer.Stop();
+
+                enemyDigimon1.NightRaid();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
+            }
+
+            if (enemyDigimon1.stats.digimonName == "Whamon")
+            {
+                Debug.Log("Whamon uses Tidal Wave!");
+
+                videoPlayer.clip = tidalWave;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(3f);
+
+                videoPlayer.Stop();
+
+                enemyDigimon1.TidalWave();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
+            }
+
+            if (enemyDigimon1.stats.digimonName == "Dragomon")
+            {
+                int randomTarget = Random.Range(1, allyDigimonAlive.Count + 1);
+
+                if (randomTarget == 1)
+                {
+                    if (playerDigimon1.alive)
+                    {
+                        enemyTargetDigimon = 1;
+                        enemyAttackingP1 = true;
+
+                    }
+                    else
+                    {
+                        enemyTargetDigimon = 2;
+                        enemyAttackingP2 = true;
+                    }
+                }
+                else if (randomTarget == 2)
+                {
+                    if (playerDigimon2.alive)
+                    {
+                        enemyTargetDigimon = 2;
+                        enemyAttackingP2 = true;
+                    }
+                    else
+                    {
+                        enemyTargetDigimon = 1;
+                        enemyAttackingP1 = true;
+                    }
+                }
+
+                Debug.Log("Dragomon uses Forbidden Trident!");
+
+                videoPlayer.clip = forbiddenTrident;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(2.5f);
+
+                videoPlayer.Stop();
+
+                enemyDigimon1.ForbiddenTrident();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
             }
 
             enemyDigimon1Turn = false;
@@ -1493,9 +2050,98 @@ public class BattleManager : MonoBehaviour
             {
                 Debug.Log("Machinedramon uses Infinity Cannon!");
 
-                yield return new WaitForSeconds(1f);
+                videoPlayer.clip = infinityCannon;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(1.5f);
+
+                videoPlayer.Stop();
 
                 enemyDigimon2.InfinityCannon();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
+            }
+
+            if (enemyDigimon2.stats.digimonName == "Myotismon")
+            {
+                Debug.Log("Myotismon uses Night Raid!");
+
+                videoPlayer.clip = nightRaid;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(1.5f);
+
+                videoPlayer.Stop();
+
+                enemyDigimon2.NightRaid();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
+            }
+
+            if (enemyDigimon2.stats.digimonName == "Whamon")
+            {
+                Debug.Log("Whamon uses Tidal Wave!");
+
+                videoPlayer.clip = tidalWave;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(3f);
+
+                videoPlayer.Stop();
+
+                enemyDigimon2.TidalWave();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
+            }
+
+            if (enemyDigimon2.stats.digimonName == "Dragomon")
+            {
+                int randomTarget = Random.Range(1, allyDigimonAlive.Count + 1);
+
+                if (randomTarget == 1)
+                {
+                    if (playerDigimon1.alive)
+                    {
+                        enemyTargetDigimon = 1;
+                        enemyAttackingP1 = true;
+
+                    }
+                    else
+                    {
+                        enemyTargetDigimon = 2;
+                        enemyAttackingP2 = true;
+                    }
+                }
+                else if (randomTarget == 2)
+                {
+                    if (playerDigimon2.alive)
+                    {
+                        enemyTargetDigimon = 2;
+                        enemyAttackingP2 = true;
+                    }
+                    else
+                    {
+                        enemyTargetDigimon = 1;
+                        enemyAttackingP1 = true;
+                    }
+                }
+
+                Debug.Log("Dragomon uses Forbidden Trident!");
+
+                videoPlayer.clip = forbiddenTrident;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(2.5f);
+
+                videoPlayer.Stop();
+
+                enemyDigimon2.ForbiddenTrident();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
             }
 
             enemyDigimon2Turn = false;
@@ -1506,9 +2152,98 @@ public class BattleManager : MonoBehaviour
             {
                 Debug.Log("Machinedramon uses Infinity Cannon!");
 
-                yield return new WaitForSeconds(1f);
+                videoPlayer.clip = infinityCannon;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(1.5f);
+
+                videoPlayer.Stop();
 
                 enemyDigimon3.InfinityCannon();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
+            }
+
+            if (enemyDigimon3.stats.digimonName == "Myotismon")
+            {
+                Debug.Log("Myotismon uses Night Raid!");
+
+                videoPlayer.clip = nightRaid;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(1.5f);
+
+                videoPlayer.Stop();
+
+                enemyDigimon3.NightRaid();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
+            }
+
+            if (enemyDigimon3.stats.digimonName == "Whamon")
+            {
+                Debug.Log("Whamon uses Tidal Wave!");
+
+                videoPlayer.clip = tidalWave;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(3f);
+
+                videoPlayer.Stop();
+
+                enemyDigimon3.TidalWave();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
+            }
+
+            if (enemyDigimon3.stats.digimonName == "Dragomon")
+            {
+                int randomTarget = Random.Range(1, allyDigimonAlive.Count + 1);
+
+                if (randomTarget == 1)
+                {
+                    if (playerDigimon1.alive)
+                    {
+                        enemyTargetDigimon = 1;
+                        enemyAttackingP1 = true;
+
+                    }
+                    else
+                    {
+                        enemyTargetDigimon = 2;
+                        enemyAttackingP2 = true;
+                    }
+                }
+                else if (randomTarget == 2)
+                {
+                    if (playerDigimon2.alive)
+                    {
+                        enemyTargetDigimon = 2;
+                        enemyAttackingP2 = true;
+                    }
+                    else
+                    {
+                        enemyTargetDigimon = 1;
+                        enemyAttackingP1 = true;
+                    }
+                }
+
+                Debug.Log("Dragomon uses Forbidden Trident!");
+
+                videoPlayer.clip = forbiddenTrident;
+                videoPlayer.Play();
+
+                yield return new WaitForSeconds(2.5f);
+
+                videoPlayer.Stop();
+
+                enemyDigimon3.ForbiddenTrident();
+
+                audioSource.PlayOneShot(hit);
+                damageDealt = true;
             }
 
             enemyDigimon3Turn = false;
@@ -1518,21 +2253,29 @@ public class BattleManager : MonoBehaviour
         {
             playerDigimon1.currentHP = 0;
             player1HPSlider.value = playerDigimon1.currentHP;
-            player1Alive = false;
+            spawnedAlly1.GetComponent<SpriteRenderer>().color = Color.gray;
+            playerDigimon1.alive = false;
             allyDigimonAlive.Remove(spawnedAlly1);
         }
         if (playerDigimon2.currentHP < 0)
         {
             playerDigimon2.currentHP = 0;
             player2HPSlider.value = playerDigimon2.currentHP;
-            player2Alive = false;
-            allyDigimonAlive.Remove(spawnedAlly1);
+            spawnedAlly2.GetComponent<SpriteRenderer>().color = Color.gray;
+            playerDigimon2.alive = false;
+            allyDigimonAlive.Remove(spawnedAlly2);
         }
 
         player1HPSlider.value = playerDigimon1.currentHP;
         player2HPSlider.value = playerDigimon2.currentHP;
 
         yield return new WaitForSeconds(1f);
+
+        damageToPlayer1Text.text = "";
+        damageToPlayer2Text.text = "";
+
+        enemyAttackingP1 = false;
+        enemyAttackingP2 = false;
 
         // Places Digimon to back of the turn que
         digimonOnField.RemoveAt(0);
@@ -1705,6 +2448,9 @@ public class BattleManager : MonoBehaviour
                 if (enemyDigimon1.currentHP < 0)
                 {
                     enemyDigimon1.currentHP = 0;
+                    digimonOnField.Remove(spawnedEnemy1);
+                    enemyDigimonList.Remove(spawnedEnemy1);
+                    Destroy(spawnedEnemy1);
                 }
             }
             if (enemyDigimon2)
@@ -1712,6 +2458,9 @@ public class BattleManager : MonoBehaviour
                 if (enemyDigimon2.currentHP < 0)
                 {
                     enemyDigimon2.currentHP = 0;
+                    digimonOnField.Remove(spawnedEnemy2);
+                    enemyDigimonList.Remove(spawnedEnemy2);
+                    Destroy(spawnedEnemy2);
                 }
             }
             if (enemyDigimon3)
@@ -1719,6 +2468,8 @@ public class BattleManager : MonoBehaviour
                 if (enemyDigimon3.currentHP < 0)
                 {
                     enemyDigimon3.currentHP = 0;
+                    digimonOnField.Remove(spawnedEnemy3);
+                    Destroy(spawnedEnemy3);
                 }
             }
         }
@@ -1741,6 +2492,7 @@ public class BattleManager : MonoBehaviour
                     playerDigimon1.currentHP -= damageDone;
                     //playerDigimon1.currentHP -= 1000000000;
                     player1HPSlider.value = playerDigimon1.currentHP;
+                    damageToPlayer1Text.text = damageDone.ToString();
 
                     Debug.Log($"{playerDigimon1.stats.digimonName} has {playerDigimon1.currentHP} HP remaining!");
                     enemyDigimon1Turn = false;
@@ -1758,7 +2510,9 @@ public class BattleManager : MonoBehaviour
                     Debug.Log($"{playerDigimon2.stats.digimonName} takes {damageDone} damage");
 
                     playerDigimon2.currentHP -= damageDone;
+                    player2HPSlider.value = playerDigimon2.currentHP;
                     //playerDigimon2.currentHP -= 1000000000;
+                    damageToPlayer2Text.text = damageDone.ToString();
 
                     Debug.Log($"{playerDigimon2.stats.digimonName} has {playerDigimon2.currentHP} HP remaining!");
                     enemyDigimon1Turn = false;
@@ -1781,6 +2535,7 @@ public class BattleManager : MonoBehaviour
                     playerDigimon1.currentHP -= damageDone;
                     player1HPSlider.value = playerDigimon1.currentHP;
                     //playerDigimon1.stats.currentHP -= 1000000000;
+                    damageToPlayer1Text.text = damageDone.ToString();
 
                     Debug.Log($"{playerDigimon1.stats.digimonName} has {playerDigimon1.currentHP} HP remaining!");
                     enemyDigimon2Turn = false;
@@ -1798,7 +2553,9 @@ public class BattleManager : MonoBehaviour
                     Debug.Log($"{playerDigimon2.stats.digimonName} takes {damageDone} damage");
 
                     playerDigimon2.currentHP -= damageDone;
+                    player2HPSlider.value = playerDigimon2.currentHP;
                     //playerDigimon1.stats.currentHP -= 1000000000;
+                    damageToPlayer2Text.text = damageDone.ToString();
 
                     Debug.Log($"{playerDigimon2.stats.digimonName} has {playerDigimon2.currentHP} HP remaining!");
                     enemyDigimon1Turn = false;
@@ -1819,6 +2576,8 @@ public class BattleManager : MonoBehaviour
                     Debug.Log($"{playerDigimon1.stats.digimonName} takes {damageDone} damage");
 
                     playerDigimon1.currentHP -= damageDone;
+                    player1HPSlider.value = playerDigimon1.currentHP;
+                    damageToPlayer1Text.text = damageDone.ToString();
                     //playerDigimon1.stats.currentHP -= 1000000000;
 
                     Debug.Log($"{playerDigimon1.stats.digimonName} has {playerDigimon1.currentHP} HP remaining!");
@@ -1837,6 +2596,8 @@ public class BattleManager : MonoBehaviour
                     Debug.Log($"{playerDigimon2.stats.digimonName} takes {damageDone} damage");
 
                     playerDigimon2.currentHP -= damageDone;
+                    player2HPSlider.value = playerDigimon2.currentHP;
+                    damageToPlayer2Text.text = damageDone.ToString();
                     //playerDigimon1.stats.currentHP -= 1000000000;
 
                     Debug.Log($"{playerDigimon2.stats.digimonName} has {playerDigimon2.currentHP} HP remaining!");
@@ -1849,15 +2610,17 @@ public class BattleManager : MonoBehaviour
             {
                 playerDigimon1.currentHP = 0;
                 player1HPSlider.value = playerDigimon1.currentHP;
-                player1Alive = false;
+                spawnedAlly1.GetComponent<SpriteRenderer>().color = Color.gray;
+                playerDigimon1.alive = false;
                 allyDigimonAlive.Remove(spawnedAlly1);
             }
             if (playerDigimon2.currentHP < 0)
             {
                 playerDigimon2.currentHP = 0;
                 player2HPSlider.value = playerDigimon2.currentHP;
-                player2Alive = false;
-                allyDigimonAlive.Remove(spawnedAlly1);
+                spawnedAlly2.GetComponent<SpriteRenderer>().color = Color.gray;
+                playerDigimon2.alive = false;
+                allyDigimonAlive.Remove(spawnedAlly2);
             }
 
             player1HPSlider.value = playerDigimon1.currentHP;
@@ -1887,6 +2650,7 @@ public class BattleManager : MonoBehaviour
                 player1SPSlider.value = playerDigimon1.currentSP;
                 spawnedAlly1.GetComponent<SpriteRenderer>().sortingOrder = 1;
                 spawnedAlly1.tag = "Player1";
+                player1StartPos = spawnedAlly1.transform.position;
 
                 digimonOnField.Add(spawnedAlly1);
                 allyDigimonList.Add(spawnedAlly1);
@@ -1905,6 +2669,7 @@ public class BattleManager : MonoBehaviour
                 player2SPSlider.value = playerDigimon2.currentSP;
                 spawnedAlly1.GetComponent<SpriteRenderer>().sortingOrder = 2;
                 spawnedAlly2.tag = "Player2";
+                player2StartPos = spawnedAlly2.transform.position;
 
                 digimonOnField.Add(spawnedAlly2);
                 allyDigimonList.Add(spawnedAlly2);
@@ -1921,8 +2686,8 @@ public class BattleManager : MonoBehaviour
         for (int i = 0; i < enemiesSpawned; i++)
         {
             // Grabs an enemy from random
-            //int index = Random.Range(0, enemyPrefabs.Length + 1);
-            int index = 0;
+            int index = Random.Range(0, enemyPrefabs.Length);
+            //int index = 0;
             GameObject enemyDigimon = enemyPrefabs[index];
 
             if (i == 0)
@@ -1936,6 +2701,7 @@ public class BattleManager : MonoBehaviour
                 enemy1HPSlider.value = enemyDigimon1.currentHP;
                 spawnedEnemy1.GetComponent<SpriteRenderer>().sortingOrder = 1;
                 spawnedEnemy1.tag = "Enemy1";
+                enemy1StartPos = spawnedEnemy1.transform.position;
 
                 digimonOnField.Add(spawnedEnemy1);
                 enemyDigimonList.Add(spawnedEnemy1);
@@ -1951,6 +2717,7 @@ public class BattleManager : MonoBehaviour
                 enemy2HPSlider.value = enemyDigimon2.currentHP;
                 spawnedEnemy2.GetComponent<SpriteRenderer>().sortingOrder = 2;
                 spawnedEnemy2.tag = "Enemy2";
+                enemy2StartPos = spawnedEnemy2.transform.position;
 
                 digimonOnField.Add(spawnedEnemy2);
                 enemyDigimonList.Add(spawnedEnemy2);
@@ -1966,6 +2733,7 @@ public class BattleManager : MonoBehaviour
                 enemy3HPSlider.value = enemyDigimon3.currentHP;
                 spawnedEnemy3.GetComponent<SpriteRenderer>().sortingOrder = 3;
                 spawnedEnemy3.tag = "Enemy3";
+                enemy3StartPos = spawnedEnemy3.transform.position;
 
                 digimonOnField.Add(spawnedEnemy3);
                 enemyDigimonList.Add(spawnedEnemy3);
@@ -1984,18 +2752,21 @@ public class BattleManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 2;
             }
 
             if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 1;
             }
 
             if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 3;
             }
@@ -2003,6 +2774,7 @@ public class BattleManager : MonoBehaviour
             // Changes to Target State
             if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
             {
+                audioSource.PlayOneShot(selectButton);
                 image.color = Color.white;
                 multiTarget = false;
                 usingAttack = true;
@@ -2015,12 +2787,14 @@ public class BattleManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 2;
             }
 
             if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 0;
             }
@@ -2028,6 +2802,7 @@ public class BattleManager : MonoBehaviour
             // Changes to Skills State
             if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
             {
+                audioSource.PlayOneShot(selectButton);
                 image.color = Color.white;
                 uiState = UIState.Skills;
             } 
@@ -2037,18 +2812,21 @@ public class BattleManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.S) || Input.GetKeyDown(KeyCode.DownArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 0;
             }
 
             if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 1;
             }
 
             if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.LeftArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 3;
             }
@@ -2056,6 +2834,7 @@ public class BattleManager : MonoBehaviour
             // Digimon Guards
             if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
             {
+                audioSource.PlayOneShot(selectButton);
                 image.color = Color.white;
                 if (playerDigimon1Turn)
                 {
@@ -2079,12 +2858,14 @@ public class BattleManager : MonoBehaviour
         {
             if (Input.GetKeyDown(KeyCode.W) || Input.GetKeyDown(KeyCode.UpArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 2;
             }
 
             if (Input.GetKeyDown(KeyCode.D) || Input.GetKeyDown(KeyCode.RightArrow))
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onButton = 0;
             }
@@ -2092,6 +2873,7 @@ public class BattleManager : MonoBehaviour
             // Changes to Items State
             if (Input.GetKeyDown(KeyCode.Z) || Input.GetKeyDown(KeyCode.Return))
             {
+                audioSource.PlayOneShot(selectButton);
                 image.color = Color.white;
                 uiState = UIState.Items;
             }
@@ -2120,6 +2902,7 @@ public class BattleManager : MonoBehaviour
             if (onItemButton > 1)
             {
                 onItemButton--;
+                audioSource.PlayOneShot(moveButtons);
             }
 
             Vector2 currentPos = itemSelectorBox.transform.position;
@@ -2132,6 +2915,7 @@ public class BattleManager : MonoBehaviour
             if (onItemButton < itemUIButtons.Length)
             {
                 onItemButton++;
+                audioSource.PlayOneShot(moveButtons);
             }
 
             Vector2 currentPos = itemSelectorBox.transform.position;
@@ -2145,6 +2929,7 @@ public class BattleManager : MonoBehaviour
             {
                 if (hpCapsuleAmount > 0)
                 {
+                    audioSource.PlayOneShot(selectButton);
                     onAlly = 1;
                     targetingAlly = true;
                     targetingForItem = true;
@@ -2162,6 +2947,7 @@ public class BattleManager : MonoBehaviour
             {
                 if (spCapsuleAmount > 0)
                 {
+                    audioSource.PlayOneShot(selectButton);
                     onAlly = 1;
                     targetingAlly = true;
                     targetingForItem = true;
@@ -2178,6 +2964,7 @@ public class BattleManager : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace))
         {
+            audioSource.PlayOneShot(backButton);
             itemUI.SetActive(false);
             itemMenuUp = false;
             uiState = UIState.Root;
@@ -2207,7 +2994,10 @@ public class BattleManager : MonoBehaviour
 
                 yield return new WaitForSeconds(1f);
 
+                playerHealing = true;
+                healtoPlayer1Text.text = "750";
                 playerDigimon1.currentHP += 750;
+                audioSource.PlayOneShot(heal);
 
                 if (playerDigimon1.currentHP > playerDigimon1.stats.hp)
                 {
@@ -2223,7 +3013,10 @@ public class BattleManager : MonoBehaviour
 
                 yield return new WaitForSeconds(1f);
 
+                playerHealing = true;
+                healtoPlayer2Text.text = "750";
                 playerDigimon2.currentHP += 750;
+                audioSource.PlayOneShot(heal);
 
                 if (playerDigimon2.currentHP > playerDigimon2.stats.hp)
                 {
@@ -2242,7 +3035,10 @@ public class BattleManager : MonoBehaviour
 
                 yield return new WaitForSeconds(1f);
 
+                playerSpGain = true;
+                spToPlayer1Text.text = "90";
                 playerDigimon1.currentSP += 90;
+                audioSource.PlayOneShot(heal);
 
                 if (playerDigimon1.currentSP > playerDigimon1.stats.sp)
                 {
@@ -2258,7 +3054,10 @@ public class BattleManager : MonoBehaviour
 
                 yield return new WaitForSeconds(1f);
 
+                playerSpGain = true;
+                spToPlayer2Text.text = "90";
                 playerDigimon2.currentSP += 90;
+                audioSource.PlayOneShot(heal);
 
                 if (playerDigimon2.currentSP > playerDigimon2.stats.sp)
                 {
@@ -2272,6 +3071,12 @@ public class BattleManager : MonoBehaviour
         }
 
         yield return new WaitForSeconds(1f);
+
+        healtoPlayer1Text.text = "";
+        healtoPlayer2Text.text = "";
+
+        spToPlayer1Text.text = "";
+        spToPlayer2Text.text = "";
 
         state = BattleState.PlayerEndTurn;
     }
@@ -2343,6 +3148,7 @@ public class BattleManager : MonoBehaviour
         {
             if (onSkillButton > 1)
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onSkillButton--;
             }
@@ -2351,6 +3157,7 @@ public class BattleManager : MonoBehaviour
         {
             if (onSkillButton < skillsUIButtons.Length)
             {
+                audioSource.PlayOneShot(moveButtons);
                 image.color = Color.white;
                 onSkillButton++;
             }
@@ -2363,6 +3170,7 @@ public class BattleManager : MonoBehaviour
                 {
                     if (playerDigimon1.currentSP > playerDigimon1.stats.skill1Cost)
                     {
+                        audioSource.PlayOneShot(selectButton);
                         image.color = Color.white;
                         multiTarget = playerDigimon1.stats.skill1MultiTarget;
                         targetingEnemy = true;
@@ -2382,6 +3190,7 @@ public class BattleManager : MonoBehaviour
                 {
                     if (playerDigimon1.currentSP > playerDigimon1.stats.skill2Cost)
                     {
+                        audioSource.PlayOneShot(selectButton);
                         image.color = Color.white;
                         multiTarget = playerDigimon1.stats.skill2MultiTarget;
                         targetingEnemy = true;
@@ -2419,6 +3228,7 @@ public class BattleManager : MonoBehaviour
                 {
                     if (playerDigimon2.currentSP > playerDigimon2.stats.skill1Cost)
                     {
+                        audioSource.PlayOneShot(selectButton);
                         image.color = Color.white;
                         multiTarget = playerDigimon2.stats.skill1MultiTarget;
                         targetingEnemy = true;
@@ -2438,6 +3248,7 @@ public class BattleManager : MonoBehaviour
                 {
                     if (playerDigimon2.currentSP > playerDigimon2.stats.skill2Cost)
                     {
+                        audioSource.PlayOneShot(selectButton);
                         image.color = Color.white;
                         multiTarget = playerDigimon2.stats.skill2MultiTarget;
                         targetingEnemy = true;
@@ -2472,6 +3283,7 @@ public class BattleManager : MonoBehaviour
         }
         else if (Input.GetKeyDown(KeyCode.X) || Input.GetKeyDown(KeyCode.Backspace))
         {
+            audioSource.PlayOneShot(backButton);
             image.color = Color.white;
             skillsUI.SetActive(false);
             skillMenuUp = false;
@@ -2498,6 +3310,7 @@ public class BattleManager : MonoBehaviour
                 {
                     if (onEnemy > 1)
                     {
+                        audioSource.PlayOneShot(moveButtons);
                         onEnemy--;
                     }
                 }
@@ -2506,6 +3319,7 @@ public class BattleManager : MonoBehaviour
                 {
                     if (onEnemy < enemyDigimonList.Count)
                     {
+                        audioSource.PlayOneShot(moveButtons);
                         onEnemy++;
                     }
                 }
@@ -2534,6 +3348,7 @@ public class BattleManager : MonoBehaviour
                             enemy2HPBar.SetActive(false);
                         }
 
+                        audioSource.PlayOneShot(selectButton);
                         enemyIndicator1.SetActive(false);
                         rootUI.SetActive(false);
 
@@ -2548,6 +3363,7 @@ public class BattleManager : MonoBehaviour
                     {
                         enemyIndicator1.SetActive(false);
 
+                        audioSource.PlayOneShot(backButton);
                         usingAttack = false;
                         targetingEnemy = false;
                         uiState = UIState.Root;
@@ -2578,6 +3394,7 @@ public class BattleManager : MonoBehaviour
                         enemyIndicator1.SetActive(false);
                         rootUI.SetActive(false);
 
+                        audioSource.PlayOneShot(selectButton);
                         attacking = true;
                         targetingEnemy = false;
                         uiState = UIState.Waiting;
@@ -2587,6 +3404,7 @@ public class BattleManager : MonoBehaviour
                     {
                         enemyIndicator1.SetActive(false);
 
+                        audioSource.PlayOneShot(backButton);
                         usingSkill = false;
                         targetingEnemy = false;
                         uiState = UIState.Skills;
@@ -2629,6 +3447,7 @@ public class BattleManager : MonoBehaviour
                     enemyIndicator3.SetActive(false);
                     rootUI.SetActive(false);
 
+                    audioSource.PlayOneShot(selectButton);
                     attacking = true;
                     targetingEnemy = false;
                     uiState = UIState.Waiting;
@@ -2639,6 +3458,7 @@ public class BattleManager : MonoBehaviour
                     enemyIndicator2.SetActive(false);
                     enemyIndicator3.SetActive(false);
 
+                    audioSource.PlayOneShot(backButton);
                     usingSkill = false;
                     targetingEnemy = false;
                     uiState = UIState.Skills;
@@ -2661,6 +3481,7 @@ public class BattleManager : MonoBehaviour
                 {
                     if (onAlly > 1)
                     {
+                        audioSource.PlayOneShot(moveButtons);
                         onAlly--;
                     }
                 }
@@ -2668,6 +3489,7 @@ public class BattleManager : MonoBehaviour
                 {
                     if (onAlly < allyDigimonList.Count)
                     {
+                        audioSource.PlayOneShot(moveButtons);
                         onAlly++;
                     }
                 }
@@ -2685,6 +3507,7 @@ public class BattleManager : MonoBehaviour
                     allyIndicator1.SetActive(false);
                     rootUI.SetActive(false);
 
+                    audioSource.PlayOneShot(selectButton);
                     targetingForItem = false;
                     usingItem = true;
                     targetingAlly = false;
@@ -2696,6 +3519,7 @@ public class BattleManager : MonoBehaviour
                     rootUI.SetActive(true);
                     itemUI.SetActive(true);
 
+                    audioSource.PlayOneShot(backButton);
                     targetingForItem = false;
                     targetingAlly = false;
                     uiState = UIState.Items;

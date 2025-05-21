@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 387f68be94f135243882db9bf0427b16, type: 3}
+  m_Name: WhamonStats
+  m_EditorClassIdentifier: 
+  digimonName: Whamon
+  hp: 2320
+  sp: 137
+  atk: 177
+  intel: 173
+  def: 177
+  spd: 144
+  skill1Name: Tidal Wave
+  skill1Type: Magic
+  skill1Description: Magic attack, 65 Water damage to all foes.
+  skill1Power: 65
+  skill1Cost: 15
+  skill1MultiTarget: 0
+  skill2Name: 
+  skill2Type: 
+  skill2Description: 
+  skill2Power: 0
+  skill2Cost: 0
+  skill2MultiTarget: 0
+  skill3Name: 
+  skill3Type: 
+  skill3Description: 
+  skill3Power: 0
+  skill3Cost: 0
+  skill3MultiTarget: 0

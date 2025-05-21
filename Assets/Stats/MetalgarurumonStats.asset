@@ -21,8 +21,7 @@ MonoBehaviour:
   spd: 242
   skill1Name: Freezing Breath
   skill1Type: Magic
-  skill1Description: Magic attack, 120 Water damage to one foe. 25% chance of paralyzing
-    target.
+  skill1Description: Magic attack, 120 Water damage to one foe.
   skill1Power: 120
   skill1Cost: 20
   skill1MultiTarget: 0

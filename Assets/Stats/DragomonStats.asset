@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 387f68be94f135243882db9bf0427b16, type: 3}
+  m_Name: DragomonStats
+  m_EditorClassIdentifier: 
+  digimonName: Dragomon
+  hp: 1870
+  sp: 154
+  atk: 190
+  intel: 176
+  def: 170
+  spd: 148
+  skill1Name: Forbidden Trident
+  skill1Type: Physical
+  skill1Description: Physical attack, 115 Water damage to one foe.
+  skill1Power: 115
+  skill1Cost: 15
+  skill1MultiTarget: 0
+  skill2Name: 
+  skill2Type: 
+  skill2Description: 
+  skill2Power: 0
+  skill2Cost: 0
+  skill2MultiTarget: 0
+  skill3Name: 
+  skill3Type: 
+  skill3Description: 
+  skill3Power: 0
+  skill3Cost: 0
+  skill3MultiTarget: 0
